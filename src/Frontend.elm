@@ -15,6 +15,7 @@ import Lamdera
 import Lamdera.Json as Decode exposing (Decoder)
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..), Icon)
+import Time
 import Types exposing (..)
 import Url
 
@@ -118,7 +119,7 @@ update msg model =
             ( { model | page = Menu { current = Just book } }, Cmd.none )
 
         OpenBook book ->
-            ( { model | page = Typing { dictation = bookToDictation book, madeError = False, errors = [], layer = 1, bookTitle = book.title } }, Cmd.none )
+            ( { model | page = Typing { dictation = bookToDictation book, madeError = False, errors = [], layer = 1, book = book, time = 0, paused = True } }, Cmd.none )
 
         ToMenu ->
             ( { model | page = Menu { current = Nothing } }, Cmd.none )
@@ -139,7 +140,11 @@ update msg model =
                                     { model | page = Typing page }
 
                                 Nothing ->
-                                    { model | page = TypingStatistic typing.errors, statistic = model.statistic ++ [ { errors = typing.errors, bookTitle = typing.bookTitle } ] }
+                                    let
+                                        past =
+                                            { errors = typing.errors, book = typing.book, duration = typing.time }
+                                    in
+                                    { model | page = TypingStatistic past, statistic = model.statistic ++ [ past ] }
                     in
                     ( next, Cmd.none )
 
@@ -182,6 +187,45 @@ update msg model =
         ToStatistic ->
             ( { model | page = Statistic }, Cmd.none )
 
+        ToTypingStatistic past ->
+            ( { model | page = TypingStatistic past }, Cmd.none )
+
+        TickTypingTime ->
+            case model.page of
+                Typing typing ->
+                    let
+                        next =
+                            { typing | time = typing.time + tickDurationInSec }
+                    in
+                    ( { model | page = Typing next }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        Pause ->
+            case model.page of
+                Typing typing ->
+                    let
+                        next =
+                            { typing | paused = True }
+                    in
+                    ( { model | page = Typing next }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        Play ->
+            case model.page of
+                Typing typing ->
+                    let
+                        next =
+                            { typing | paused = False }
+                    in
+                    ( { model | page = Typing next }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 updateDictation : KeyboardKey -> UserSettings -> TypingPage -> Maybe TypingPage
 updateDictation keyboardKey settings typing =
@@ -204,14 +248,20 @@ updateDictation keyboardKey settings typing =
                     Just typing
 
         Character char ->
-            if settings.blockOnError == OneBackspace && typing.madeError then
+            if typing.paused then
+                Just { typing | paused = False }
+
+            else if settings.blockOnError == OneBackspace && typing.madeError then
                 Just typing
 
-            else if char == typing.dictation.current then
-                typing.dictation |> advanceDictation |> Maybe.map (\dictation -> { typing | dictation = dictation, madeError = False })
+            else if char /= typing.dictation.current && typing.madeError then
+                Just typing
+
+            else if char /= typing.dictation.current then
+                Just { typing | madeError = True, errors = typing.errors ++ [ { was = char, should = typing.dictation.current } ] }
 
             else
-                Just { typing | madeError = True, errors = typing.errors ++ [ { was = char, should = typing.dictation.current } ] }
+                typing.dictation |> advanceDictation |> Maybe.map (\dictation -> { typing | dictation = dictation, madeError = False })
 
 
 bookToDictation : Book -> Dictation
@@ -239,13 +289,22 @@ updateFromBackend msg model =
             ( { model | settings = settings }, Cmd.none )
 
 
+tickDurationInSec =
+    0.1
+
+
 subscriptions : Model -> Sub FrontendMsg
 subscriptions model =
     case model.page of
-        Typing _ ->
+        Typing { paused } ->
             Sub.batch
                 [ keyDecoder |> Decode.map (KeyDown << toKey) |> Browser.Events.onKeyDown
                 , keyDecoder |> Decode.map (KeyUp << toKey) |> Browser.Events.onKeyUp
+                , if paused then
+                    Sub.none
+
+                  else
+                    Time.every (tickDurationInSec * 1000) (\_ -> TickTypingTime)
                 ]
 
         _ ->
@@ -278,8 +337,8 @@ view model =
                 Typing typing ->
                     viewTyping typing model.settings
 
-                TypingStatistic errors ->
-                    viewTypingStatistic errors
+                TypingStatistic past ->
+                    viewTypingStatistic past
 
                 Settings ->
                     viewSettings model.settings
@@ -290,9 +349,10 @@ view model =
     { title = "JTipp"
     , body =
         [ ptMonoLink
+        , styleTag
         , layout [ width fill, height fill, Background.color wheat, Font.color black ]
             (el
-                [ centerX, centerY, Border.color black, Border.width 1, padding 20, Border.rounded 16 ]
+                [ centerX, centerY, Border.color black, Border.width 1, padding appPadding, Border.rounded 16 ]
              <|
                 body
             )
@@ -300,8 +360,31 @@ view model =
     }
 
 
+appPadding =
+    24
+
+
 ptMonoLink =
     Html.node "link" [ Html.Attributes.href "https://fonts.googleapis.com/css2?family=PT+Mono&display=swap", Html.Attributes.rel "stylesheet" ] []
+
+
+{-| this changes the sidebar to look more like the theme
+-}
+styleTag =
+    Html.node "style"
+        []
+        [ Html.text """
+*::-webkit-scrollbar {
+    width: 24px;
+}
+*::-webkit-scrollbar-track {
+    border-left: 1px solid black;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: black;
+}
+ """
+        ]
 
 
 
@@ -312,7 +395,7 @@ viewMenu : Model -> MenuPage -> Element FrontendMsg
 viewMenu model menu =
     let
         block label child =
-            column [ spacing 8 ] [ el [ Font.bold ] <| text label, child ]
+            column [ spacing 8 ] [ subTitle label, child ]
 
         sidebar =
             case menu.current of
@@ -326,8 +409,11 @@ viewMenu model menu =
 
                 Nothing ->
                     none
+
+        topBar =
+            row [ spacing 16, alignRight, moveRight (appPadding + 21), moveUp (appPadding + 21) ] [ statisticButton, settingsButton ]
     in
-    column [ spacing 32, inFront <| row [ spacing 16, alignRight, moveRight 40, moveUp 40 ] [ statisticButton, settingsButton ] ]
+    column [ spacing 32, inFront <| topBar ]
         [ title "Dictations"
         , row
             [ spacing 40 ]
@@ -343,7 +429,7 @@ viewMenuItem : Book -> Element FrontendMsg
 viewMenuItem book =
     let
         charsPerSecond =
-            4
+            5
     in
     Input.button
         [ width fill, padding 8, mouseOver [ Background.color primary ] ]
@@ -361,8 +447,7 @@ viewSettings settings =
     let
         settingsBlock label child =
             column [ width fill, spacing 8 ]
-                [ el [ Font.bold ] <|
-                    text label
+                [ subTitle label
                 , child
                 ]
 
@@ -387,7 +472,7 @@ viewSettings settings =
                         }
                 ]
     in
-    column [ inFront <| el [ moveLeft 40, moveUp 40 ] <| backButton, spacing 48 ]
+    column [ inFront <| el [ moveLeft (appPadding + 21), moveUp (appPadding + 21) ] <| backButton, spacing 48 ]
         [ title "Settings"
         , settingsBlock
             "Layout"
@@ -420,10 +505,6 @@ viewSettingsItem labelText msg active =
         { label = text labelText, onPress = Just msg }
 
 
-title labelText =
-    el [ Font.size 32 ] <| text labelText
-
-
 printSeconds seconds =
     if seconds > 60 then
         ((seconds / 60) |> round |> String.fromInt) ++ "min"
@@ -437,22 +518,43 @@ printSeconds seconds =
 
 
 viewTyping : TypingPage -> UserSettings -> Element FrontendMsg
-viewTyping typing settings =
+viewTyping { dictation, layer, madeError, paused } settings =
     let
         color =
-            if typing.madeError then
+            if madeError then
                 primary
 
             else
                 secondary
+
+        typewriter =
+            row [ monospace, Font.size 32 ]
+                [ text (dictation.prev |> String.right settings.paddingLeft |> String.padLeft settings.paddingLeft ' ')
+                , el [ Background.color color, Font.color wheat ] <| text <| String.fromChar dictation.current
+                , el [ Font.color secondary ] <| text (dictation.next |> String.left settings.paddingRight |> String.padRight settings.paddingRight ' ')
+                ]
+
+        pausedEl =
+            el [ centerX, monospace, Font.size 32 ] <| text <| String.pad (settings.paddingLeft + settings.paddingRight + 1) ' ' <| "Paused. Press Any Key"
     in
-    column [ spacing 64, inFront <| el [ moveLeft 40, moveUp 40 ] <| backButton ]
-        [ row [ monospace, Font.size 32 ]
-            [ text (typing.dictation.prev |> String.right settings.paddingLeft |> String.padLeft settings.paddingLeft ' ')
-            , el [ Background.color color, Font.color wheat ] <| text <| String.fromChar typing.dictation.current
-            , el [ Font.color secondary ] <| text (typing.dictation.next |> String.left settings.paddingRight |> String.padRight settings.paddingRight ' ')
-            ]
-        , image [ width fill ] { src = layerUrl settings.layout typing.layer, description = "" }
+    column
+        [ spacing 64
+        , inFront <|
+            row [ moveLeft (appPadding + 21), moveUp (appPadding + 21), spacing 8 ]
+                [ backButton
+                , if paused then
+                    playButton
+
+                  else
+                    pauseButton
+                ]
+        ]
+        [ if paused then
+            pausedEl
+
+          else
+            typewriter
+        , image [ width fill ] { src = layerUrl settings.layout layer, description = "" }
         ]
 
 
@@ -493,19 +595,85 @@ layerUrl layout layer =
 
 viewStatistic : List PastDictation -> Element FrontendMsg
 viewStatistic pastDictations =
-    column
-        [ inFront <| el [ moveLeft 40, moveUp 40 ] <| backButton ]
-        (if List.isEmpty pastDictations then
-            [ text "no past dictations" ]
-
-         else
-            List.map (\dictation -> text dictation.bookTitle) pastDictations
-        )
-
-
-viewTypingStatistic : List TypeError -> Element FrontendMsg
-viewTypingStatistic errors =
     let
+        viewPast : PastDictation -> Element FrontendMsg
+        viewPast past =
+            Input.button [ width fill, padding 8, mouseOver [ Background.color primary ] ]
+                { label = text <| (String.fromInt <| points past) ++ "\t" ++ past.book.title
+                , onPress = Just (ToTypingStatistic past)
+                }
+    in
+    column [ inFront <| el [ moveLeft (appPadding + 21), moveUp (appPadding + 21) ] <| backButton, spacing 48, width fill ]
+        [ title "Statistic"
+        , column [ spacing 8, width fill ]
+            [ subTitle "Past Dictations"
+            , if List.isEmpty pastDictations then
+                info "You have no past dictations"
+
+              else
+                el [] <|
+                    column
+                        [ width fill
+                        , height (fill |> maximum 512)
+                        , scrollbarY
+                        , Border.width 1
+                        , Border.color black
+                        ]
+                    <|
+                        List.map viewPast (List.reverse pastDictations)
+            ]
+        ]
+
+
+points : PastDictation -> Int
+points past =
+    let
+        err =
+            toFloat (List.length past.errors) / toFloat (String.length past.book.content)
+    in
+    max 0 <| round <| ((charsPerMinute past.book past.duration / 5) - (err * 5)) * 10
+
+
+wordsPerMinute book duration =
+    let
+        words =
+            book.content |> String.words |> List.length
+
+        durationInMin =
+            duration / 60
+    in
+    toFloat words / durationInMin
+
+
+charsPerMinute book duration =
+    let
+        chars =
+            String.length book.content
+
+        durationInMin =
+            duration / 60
+    in
+    toFloat chars / durationInMin
+
+
+info labelText =
+    row [ spacing 8 ] [ materialIcon Icons.info, text labelText ]
+
+
+errorPercent { content } errors =
+    let
+        perc =
+            round ((toFloat (List.length errors) / toFloat (String.length content)) * 100)
+    in
+    String.fromInt perc ++ "%"
+
+
+viewTypingStatistic : PastDictation -> Element FrontendMsg
+viewTypingStatistic past =
+    let
+        { book, errors, duration } =
+            past
+
         grouped =
             errors
                 |> List.foldr (\error -> Dict.update error.should (\y -> Just <| Maybe.withDefault [] y ++ [ error ])) Dict.empty
@@ -513,16 +681,46 @@ viewTypingStatistic errors =
                 |> List.sortBy (Tuple.second >> List.length)
                 |> List.reverse
     in
-    column [ spacing 16 ]
-        [ title "das sind deine Statistiken"
-        , column [ spacing 8 ] (grouped |> List.map viewError)
-        , el [ centerX ] <| button (Just ToMenu) (materialIcon Icons.arrow_back)
+    column
+        [ spacing 48
+        , inFront <|
+            row [ centerX, spacing 16, alignBottom, moveDown (appPadding + 21) ]
+                [ homeButton
+                , statisticButton
+                , button (Just <| OpenBook book) (materialIcon Icons.refresh) 'r'
+                ]
+        ]
+        [ title "Your Typing Statistic"
+        , column [ spacing 8 ]
+            [ subTitle "Time"
+            , text <| "Duration: " ++ printSeconds duration
+            , text <| "Chars per Minute: " ++ (String.fromInt <| round <| charsPerMinute book duration)
+            , text <| "Words per Minute: " ++ (String.fromInt <| round <| wordsPerMinute book duration)
+            ]
+        , column [ spacing 8 ]
+            [ subTitle "Errors Rate"
+            , text <| "Count: " ++ String.fromInt (List.length errors)
+            , text <| "Percent: " ++ errorPercent book errors
+            ]
+        , column [ spacing 8 ]
+            [ subTitle "Errors"
+            , if List.isEmpty grouped then
+                info "There are no errors"
+
+              else
+                wrappedRow [ spacing 16, width (fill |> maximum 650) ] (grouped |> List.map viewError)
+            ]
+        , column [ spacing 8 ]
+            [ subTitle "Points"
+            , text <| String.fromInt <| points past
+            ]
+        , el [] none -- blocker
         ]
 
 
 viewError : ( Char, List TypeError ) -> Element msg
 viewError ( char, typeErrors ) =
-    row [ spacing 16 ]
+    row [ spacing 8, Border.width 1, Border.color black, padding 4, Border.rounded 999 ]
         [ el
             [ monospace
             , Font.color wheat
@@ -532,15 +730,10 @@ viewError ( char, typeErrors ) =
             , height (px 24)
             ]
           <|
-            el
-                [ centerX
-                , centerY
-                ]
-            <|
+            el [ centerX, centerY ] <|
                 text <|
                     String.fromChar char
-        , text "Fehler"
-        , text <| String.fromInt <| List.length typeErrors
+        , text <| (String.fromInt <| List.length typeErrors) ++ "x"
         ]
 
 
@@ -558,19 +751,59 @@ lineClamp lines =
 
 
 backButton =
-    button (Just ToMenu) (materialIcon Icons.arrow_back)
+    button (Just ToMenu) (materialIcon Icons.arrow_back) 'b'
+
+
+pauseButton =
+    button (Just Pause) (materialIcon Icons.pause) 'p'
+
+
+playButton =
+    button (Just Play) (materialIcon Icons.play_arrow) 'p'
 
 
 settingsButton =
-    button (Just ToSettings) (materialIcon Icons.settings)
+    button (Just ToSettings) (materialIcon Icons.settings) 's'
 
 
 statisticButton =
-    button (Just ToStatistic) (materialIcon Icons.query_stats)
+    button (Just ToStatistic) (materialIcon Icons.query_stats) 't'
 
 
-button onPress label =
-    Input.button [ Background.color wheat, Border.color black, Border.width 1, Border.rounded 999, padding 8, mouseOver [ Background.color primary ] ] { label = label, onPress = onPress }
+homeButton =
+    button (Just ToMenu) (materialIcon Icons.home) 'h'
+
+
+button onPress label shortcut =
+    Input.button
+        ([ Background.color wheat
+         , Border.color black
+         , Border.width 1
+         , Border.rounded 999
+         , padding 8
+         , mouseOver [ Background.color primary ]
+         ]
+            ++ accesskey shortcut
+        )
+        { label = label, onPress = onPress }
+
+
+accesskey key =
+    [ htmlAttribute (Html.Attributes.accesskey key)
+    , htmlAttribute (Html.Attributes.title <| "Shortcut: <Alt-" ++ String.toUpper (String.fromChar key) ++ ">")
+    ]
+
+
+aspect ration =
+    htmlAttribute (Html.Attributes.style "aspect-ration" <| String.fromFloat ration)
+
+
+title labelText =
+    el [ Font.size 32 ] <| text labelText
+
+
+subTitle labelText =
+    el [ Font.bold ] <| text labelText
 
 
 materialIcon : Icon msg -> Element msg

@@ -51,7 +51,7 @@ type Layout
 type Page
     = Menu MenuPage
     | Typing TypingPage
-    | TypingStatistic (List TypeError)
+    | TypingStatistic PastDictation
     | Settings
     | Statistic
 
@@ -70,7 +70,9 @@ type alias TypingPage =
     , madeError : Bool
     , errors : List TypeError
     , layer : Int
-    , bookTitle : String
+    , book : Book
+    , time : Float
+    , paused : Bool
     }
 
 
@@ -89,7 +91,8 @@ type alias Dictation =
 
 type alias PastDictation =
     { errors : List TypeError
-    , bookTitle : String
+    , book : Book
+    , duration : Float
     }
 
 
@@ -110,6 +113,10 @@ type FrontendMsg
     | ToSettings
     | SetSettings UserSettings
     | ToStatistic
+    | ToTypingStatistic PastDictation
+    | TickTypingTime
+    | Pause
+    | Play
 
 
 type KeyboardKey
