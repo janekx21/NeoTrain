@@ -31,10 +31,10 @@ init =
 
 
 update : BackendMsg -> Model -> ( Model, Cmd BackendMsg )
-update msg _ =
+update msg model =
     case msg of
         Never ->
-            Debug.todo "never happens"
+            ( model, Cmd.none )
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
@@ -47,6 +47,21 @@ updateFromFrontend sessionId clientId msg model =
             Lamdera.sendToFrontend clientId ThrowOut
     in
     case msg of
+        UpdateSettings settings ->
+            let
+                mapSession { user } =
+                    { user = { user | settings = settings } }
+            in
+            ( { model | activeSessions = Dict.update sessionId (Maybe.map mapSession) model.activeSessions }, Cmd.none )
+
+        GetSettings ->
+            case maybeSession of
+                Just session ->
+                    ( model, Lamdera.sendToFrontend clientId <| GotSettings session.user.settings )
+
+                Nothing ->
+                    ( model, throwOut )
+
         Register username password ->
             let
                 salt =
@@ -62,21 +77,6 @@ updateFromFrontend sessionId clientId msg model =
             ( { model | passiveUsers = Dict.insert username user model.passiveUsers, currentSaltIndex = model.currentSaltIndex + 1 }
             , Lamdera.sendToFrontend clientId LoginSuccessful
             )
-
-        UpdateSettings settings ->
-            let
-                mapSession { user } =
-                    { user = { user | settings = settings } }
-            in
-            ( { model | activeSessions = Dict.update sessionId (Maybe.map mapSession) model.activeSessions }, Cmd.none )
-
-        GetSettings ->
-            case maybeSession of
-                Just session ->
-                    ( model, Lamdera.sendToFrontend clientId <| GotSettings session.user.settings )
-
-                Nothing ->
-                    ( model, throwOut )
 
         Login username password ->
             case Dict.get username model.passiveUsers of
@@ -120,3 +120,24 @@ updateFromFrontend sessionId clientId msg model =
 
                 Nothing ->
                     ( model, throwOut )
+
+
+needsLogin msg =
+    case msg of
+        UpdateSettings _ ->
+            True
+
+        GetSettings ->
+            True
+
+        Register _ _ ->
+            False
+
+        Login _ _ ->
+            False
+
+        SessionCheck ->
+            True
+
+        BackendLogout ->
+            True
