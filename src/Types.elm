@@ -2,61 +2,25 @@ module Types exposing (..)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
+import Dict exposing (Dict)
+import Lamdera exposing (ClientId, SessionId)
 import Url exposing (Url)
+
+
+
+-- Model
 
 
 type alias FrontendModel =
     { key : Key
     , items : List Book
     , page : Page
-    , settings : UserSettings
+    , settings : Settings
     , statistic : List PastDictation
     }
 
 
-
--- TODO
-
-
-type alias UserSettings =
-    { blockOnError : WaitingFor
-    , fontSize : Int
-    , paddingLeft : Int
-    , paddingRight : Int
-    , layout : Layout
-    }
-
-
-defaultSettings : UserSettings
-defaultSettings =
-    { blockOnError = CorrectLetter, fontSize = 32, paddingLeft = 20, paddingRight = 20, layout = NeoQwertz }
-
-
-type WaitingFor
-    = OneBackspace
-    | CorrectLetter
-
-
-type Layout
-    = Neo
-    | NeoQwertz
-    | Bone
-    | AdNW
-    | KOY
-    | NeoQwerty
-    | Vou
-    | Mine
-
-
-type Page
-    = Menu MenuPage
-    | Typing TypingPage
-    | TypingStatistic PastDictation
-    | Settings
-    | Statistic
-
-
-type alias MenuPage =
+type alias Menu =
     { current : Maybe Book
     }
 
@@ -65,7 +29,7 @@ type alias Book =
     { title : String, content : String }
 
 
-type alias TypingPage =
+type alias Typing =
     { dictation : Dictation
     , madeError : Bool
     , errors : List TypeError
@@ -96,9 +60,42 @@ type alias PastDictation =
     }
 
 
+{-| String that only allows chars and numbers
+-}
 type alias BackendModel =
-    { settings : UserSettings
+    { currentSaltIndex : Int
+    , passiveUsers : Dict Username User
+    , activeSessions : Dict SessionId Session
     }
+
+
+type alias Session =
+    { user : User }
+
+
+type alias User =
+    { username : Username
+    , passwordHash : String
+    , passwordSalt : String
+    , settings : Settings
+    }
+
+
+type alias Username =
+    String
+
+
+type alias Settings =
+    { blockOnError : WaitingFor
+    , fontSize : Int
+    , paddingLeft : Int
+    , paddingRight : Int
+    , layout : Layout
+    }
+
+
+
+-- Messages
 
 
 type FrontendMsg
@@ -111,12 +108,76 @@ type FrontendMsg
     | KeyDown KeyboardKey
     | KeyUp KeyboardKey
     | ToSettings
-    | SetSettings UserSettings
+    | SetSettings Settings
     | ToStatistic
     | ToTypingStatistic PastDictation
     | TickTypingTime
     | Pause
     | Play
+    | OnHover (Maybe PastDictation)
+    | SetUsername String
+    | SetPassword String
+    | SetVisibility Bool
+    | TryLogin String String
+    | TryRegister String String
+    | Logout
+
+
+type BackendMsg
+    = Never
+
+
+type ToBackend
+    = UpdateSettings Settings
+    | GetSettings
+    | Register String String
+    | Login String String
+    | SessionCheck
+    | BackendLogout
+
+
+type ToFrontend
+    = GotSettings Settings
+    | ThrowOut
+    | LoginSuccessful
+    | LoginFailed
+
+
+
+-- Types
+
+
+type Page
+    = MenuPage Menu
+    | TypingPage Typing
+    | TypingStatisticPage PastDictation
+    | SettingsPage
+    | StatisticPage (Maybe PastDictation)
+    | LoginPage LoginState
+
+
+type alias LoginState =
+    { username : String
+    , password : String
+    , visibility : Bool
+    , failed : Bool
+    }
+
+
+type WaitingFor
+    = OneBackspace
+    | CorrectLetter
+
+
+type Layout
+    = Neo
+    | NeoQwertz
+    | Bone
+    | AdNW
+    | KOY
+    | NeoQwerty
+    | Vou
+    | Mine
 
 
 type KeyboardKey
@@ -124,14 +185,6 @@ type KeyboardKey
     | Control String
 
 
-type ToBackend
-    = UploadSettings UserSettings
-    | FetchSettings
-
-
-type BackendMsg
-    = NoOpBackendMsg
-
-
-type ToFrontend
-    = DownloadSettings UserSettings
+defaultSettings : Settings
+defaultSettings =
+    { blockOnError = CorrectLetter, fontSize = 32, paddingLeft = 20, paddingRight = 20, layout = NeoQwertz }

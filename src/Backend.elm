@@ -1,6 +1,8 @@
 module Backend exposing (..)
 
+import Dict
 import Lamdera exposing (ClientId, SessionId)
+import Sha256 exposing (sha256)
 import Types exposing (..)
 
 
@@ -8,7 +10,10 @@ type alias Model =
     BackendModel
 
 
-app : { init : ( Model, Cmd BackendMsg ), update : BackendMsg -> Model -> ( Model, Cmd BackendMsg ), updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg ), subscriptions : Model -> Sub BackendMsg }
+
+--noinspection ElmUnusedSymbol
+
+
 app =
     Lamdera.backend
         { init = init
@@ -20,23 +25,98 @@ app =
 
 init : ( Model, Cmd BackendMsg )
 init =
-    ( { settings = defaultSettings }
+    ( { currentSaltIndex = 0, activeSessions = Dict.empty, passiveUsers = Dict.empty }
     , Cmd.none
     )
 
 
 update : BackendMsg -> Model -> ( Model, Cmd BackendMsg )
-update msg model =
+update msg _ =
     case msg of
-        NoOpBackendMsg ->
-            ( model, Cmd.none )
+        Never ->
+            Debug.todo "never happens"
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg )
-updateFromFrontend _ clientId msg model =
-    case msg of
-        UploadSettings settings ->
-            ( { model | settings = settings }, Cmd.none )
+updateFromFrontend sessionId clientId msg model =
+    let
+        maybeSession =
+            Dict.get sessionId model.activeSessions
 
-        FetchSettings ->
-            ( model, Lamdera.sendToFrontend clientId <| DownloadSettings model.settings )
+        throwOut =
+            Lamdera.sendToFrontend clientId ThrowOut
+    in
+    case msg of
+        Register username password ->
+            let
+                salt =
+                    String.fromInt model.currentSaltIndex
+
+                hash =
+                    sha256 (salt ++ password)
+
+                user : User
+                user =
+                    { username = username, passwordHash = hash, passwordSalt = salt, settings = defaultSettings }
+            in
+            ( { model | passiveUsers = Dict.insert username user model.passiveUsers, currentSaltIndex = model.currentSaltIndex + 1 }
+            , Lamdera.sendToFrontend clientId LoginSuccessful
+            )
+
+        UpdateSettings settings ->
+            let
+                mapSession { user } =
+                    { user = { user | settings = settings } }
+            in
+            ( { model | activeSessions = Dict.update sessionId (Maybe.map mapSession) model.activeSessions }, Cmd.none )
+
+        GetSettings ->
+            case maybeSession of
+                Just session ->
+                    ( model, Lamdera.sendToFrontend clientId <| GotSettings session.user.settings )
+
+                Nothing ->
+                    ( model, throwOut )
+
+        Login username password ->
+            case Dict.get username model.passiveUsers of
+                Just user ->
+                    let
+                        hash =
+                            sha256 (user.passwordSalt ++ password)
+                    in
+                    if hash == user.passwordHash then
+                        let
+                            passiveUsers =
+                                Dict.remove username model.passiveUsers
+
+                            activeSessions =
+                                Dict.insert sessionId { user = user } model.activeSessions
+                        in
+                        ( { model | passiveUsers = passiveUsers, activeSessions = activeSessions }, Lamdera.sendToFrontend clientId LoginSuccessful )
+
+                    else
+                        ( model, Lamdera.sendToFrontend clientId LoginFailed )
+
+                Nothing ->
+                    ( model, Lamdera.sendToFrontend clientId LoginFailed )
+
+        SessionCheck ->
+            if maybeSession == Nothing then
+                ( model, Lamdera.sendToFrontend clientId LoginFailed )
+
+            else
+                ( model, Lamdera.sendToFrontend clientId LoginSuccessful )
+
+        BackendLogout ->
+            case maybeSession of
+                Just session ->
+                    ( { model
+                        | activeSessions = Dict.remove sessionId model.activeSessions
+                        , passiveUsers = Dict.insert session.user.username session.user model.passiveUsers
+                      }
+                    , throwOut
+                    )
+
+                Nothing ->
+                    ( model, throwOut )
