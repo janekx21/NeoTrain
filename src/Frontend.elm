@@ -7,7 +7,7 @@ import Chart as C
 import Chart.Attributes as CA
 import Chart.Events as CE
 import Chart.Item as CI
-import Dict
+import Dict exposing (Dict)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
@@ -21,7 +21,8 @@ import Lamdera
 import Lamdera.Json as Decode exposing (Decoder)
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..), Icon)
-import Time
+import Task
+import Time exposing (Posix)
 import Types exposing (..)
 import Url
 
@@ -50,23 +51,23 @@ init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
 init _ key =
     let
         items =
-            [ Book "Foo" "foobar"
-            , Book "Ein Satz" "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
-            , Book "Diktat | Zucker im Urin" textOne
-            , Book "Elm" elmText
-            , Book "Special Chars" ":: -- \\\\ // !?!?!? ?! !? ^ ?! ^ ?!!??! ++ -- ++ -- +- -+ ; () () {} [] [] () {} \\\\ // ___ ||| $$ ## <> <> == && <= >= '' '' \"\" \"\" ~~ %% ``` ``` *** (+~}/$|…\\#/$|[%)+?$=)^|](>=\\/{[(`]?-(\\{/(->=_><!^/`~&…_[<_=&[>]^<;'\"#\"$%+|~`+?)(/{*"
-            , Book "Return" "hallo\nwelt"
+            [ Lesson "Foo" "foobar"
+            , Lesson "Ein Satz" "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
+            , Lesson "Diktat | Zucker im Urin" textOne
+            , Lesson "Elm" elmText
+            , Lesson "Special Chars" ":: -- \\\\ // !?!?!? ?! !? ^ ?! ^ ?!!??! ++ -- ++ -- +- -+ ; () () {} [] [] () {} \\\\ // ___ ||| $$ ## <> <> == && <= >= '' '' \"\" \"\" ~~ %% ``` ``` *** (+~}/$|…\\#/$|[%)+?$=)^|](>=\\/{[(`]?-(\\{/(->=_><!^/`~&…_[<_=&[>]^<;'\"#\"$%+|~`+?)(/{*"
+            , Lesson "Return" "hallo\nwelt"
             ]
                 ++ dictates
-                ++ List.repeat 40 { title = "Foo", content = String.repeat 200 "Bla" }
+                ++ List.repeat 40 { title = "todo", content = String.repeat 200 "this is just a placeholder" }
     in
     ( { key = key
       , items = items
-      , page = LoginPage emptyLoginPage
+      , page = LoginAndRegisterPage emptyLoginPage
       , settings = defaultSettings
       , statistic = []
       }
-    , Cmd.batch [ Lamdera.sendToBackend GetSettings, Lamdera.sendToBackend SessionCheck ]
+    , Cmd.batch [ Lamdera.sendToBackend GetSession ]
     )
 
 
@@ -74,15 +75,15 @@ textOne =
     "Ein Professor betonte in seinen Vorlesungen immer wieder, dass man sich als baldiger Arzt vor nichts ekeln darf. Außerdem müsse man beweisen, dass man eine herausragende Beobachtungsgabe hat. Er erklärte, dass man früher nicht die Möglichkeiten besaß, die man heute hat. So musste man beispielsweise mit der Zunge testen, wie viel Zucker im Urin ist. Die Studenten bekamen ein ungutes Gefühl, als der Professor schließlich ein Glas mit einer gelben Flüssigkeit hervorholte. Die Studenten sollten den Urin so testen wie früher. Der Professor machte es vor, tauchte den Zeigefinger in das Glas und leckte anschließend den Finger ab. Die Studenten waren schockiert. Dann hatten sie sich wieder gefasst und jeder machte es dem Professor nach. Manchmal verzog ein Student das Gesicht kurz zu einer Grimasse, aber alle leckten ihre Finger mit dem Urin ab. Dann sagte der Professor: „Ausgezeichnet. Sie alle haben ihren Ekel überwunden. Allerdings gibt es noch große Probleme bei der Beobachtung. Denn niemand hat anscheinend gesehen, dass ich zwar den Zeigefinger in das Glas gesteckt, aber den Mittelfinger abgeleckt habe."
 
 
-dictates : List Book
+dictates : List Lesson
 dictates =
-    [ Book "asdfjklö" "fjfj jfjf ff jj dd kk kddk dkdk ss ll llss slsl aa öö öaöa ööaa\ndas las jaja laff ja all fass lass fad da falls dass ff lala lfd alaaf als öd fall ad"
-    , Book "erui" "ee ii rr uu eiru ruii erru reiu rurr iuer reir erri reii irre iuer\nalufrei ruderaler reife alufreier lesefauleres kille arider irrer residuelle leises sauerer alaaf sie allerlei deliriöse reellere ruf ausfiele frisiere dies"
-    , Book "qwop" "qq pp ww oo qwop powp qwow powo pqqw owpq pqow powp woqp wwpo pqpp\nuferlose pseudofossil spediere erkiese wassre ersöffe au paarweiser diesfalls sakrale rural auffasere dieserlei kauere rasa persifliere krassere pofe kordialer spurloser"
-    , Book "ghtz" "\ntarifierst reliefartiges weiterdelegiert ausgekehlte rezipiert weiterfahrt kalfaterte rostigster auszahltet fastetest fortgejagtes weglegtest taktlosester fortzieht alleeartiger herausoperiertest getrotzter wohldosierte lautstark topaktuelles"
-    , Book "vncm" "\nunversehrtestes kastrierenden weltvergessenen zugespachtelt spielstark einheizen umzuquartierenden werksinterne zweiziffriges jugendfreier weiterrutschte durchpausten zupfenden vertrottelt chiffreartiges durchgefallen entdecktes wasserlöslicheres anfindende antioligarchischen"
-    , Book "yb" "\nwissenschaftsfreundlichster krampfig orgastische herumlenkender sechsundsechzigstes hochzurechnende schallschluckendsteserlaubnisfreiem problemlösendem nachkorrigiertest hinschmissen kriegsbeteiligter auszuschelten vorberechneter herniederschwebende vorgemachten aufbauschenden durchkramendes geköpften anmusterten"
-    , Book "x,." "\n"
+    [ Lesson "asdfjklö" "fjfj jfjf ff jj dd kk kddk dkdk ss ll llss slsl aa öö öaöa ööaa\ndas las jaja laff ja all fass lass fad da falls dass ff lala lfd alaaf als öd fall ad"
+    , Lesson "erui" "ee ii rr uu eiru ruii erru reiu rurr iuer reir erri reii irre iuer\nalufrei ruderaler reife alufreier lesefauleres kille arider irrer residuelle leises sauerer alaaf sie allerlei deliriöse reellere ruf ausfiele frisiere dies"
+    , Lesson "qwop" "qq pp ww oo qwop powp qwow powo pqqw owpq pqow powp woqp wwpo pqpp\nuferlose pseudofossil spediere erkiese wassre ersöffe au paarweiser diesfalls sakrale rural auffasere dieserlei kauere rasa persifliere krassere pofe kordialer spurloser"
+    , Lesson "ghtz" "\ntarifierst reliefartiges weiterdelegiert ausgekehlte rezipiert weiterfahrt kalfaterte rostigster auszahltet fastetest fortgejagtes weglegtest taktlosester fortzieht alleeartiger herausoperiertest getrotzter wohldosierte lautstark topaktuelles"
+    , Lesson "vncm" "\nunversehrtestes kastrierenden weltvergessenen zugespachtelt spielstark einheizen umzuquartierenden werksinterne zweiziffriges jugendfreier weiterrutschte durchpausten zupfenden vertrottelt chiffreartiges durchgefallen entdecktes wasserlöslicheres anfindende antioligarchischen"
+    , Lesson "yb" "\nwissenschaftsfreundlichster krampfig orgastische herumlenkender sechsundsechzigstes hochzurechnende schallschluckendsteserlaubnisfreiem problemlösendem nachkorrigiertest hinschmissen kriegsbeteiligter auszuschelten vorberechneter herniederschwebende vorgemachten aufbauschenden durchkramendes geköpften anmusterten"
+    , Lesson "x,." "\n"
     ]
 
 
@@ -137,7 +138,20 @@ update msg model =
             ( { model | page = MenuPage { current = Just book } }, Cmd.none )
 
         OpenBook book ->
-            ( { model | page = TypingPage { dictation = bookToDictation book, madeError = False, errors = [], layer = 1, book = book, time = 0, paused = True } }, Cmd.none )
+            ( { model
+                | page =
+                    TypingPage
+                        { dictation = bookToDictation book
+                        , madeError = False
+                        , errors = []
+                        , layer = 1
+                        , lesson = book
+                        , duration = 0
+                        , paused = True
+                        }
+              }
+            , Cmd.none
+            )
 
         ToMenu ->
             ( { model | page = MenuPage { current = Nothing } }, Cmd.none )
@@ -148,23 +162,12 @@ update msg model =
         KeyDown keyboardKey ->
             case model.page of
                 TypingPage typing ->
-                    let
-                        maybeTyping =
-                            updateDictation keyboardKey model.settings typing
+                    case updateDictation keyboardKey model.settings typing of
+                        Just page ->
+                            ( { model | page = TypingPage page }, Cmd.none )
 
-                        next =
-                            case maybeTyping of
-                                Just page ->
-                                    { model | page = TypingPage page }
-
-                                Nothing ->
-                                    let
-                                        past =
-                                            { errors = typing.errors, book = typing.book, duration = typing.time }
-                                    in
-                                    { model | page = TypingStatisticPage past, statistic = model.statistic ++ [ past ] }
-                    in
-                    ( next, Cmd.none )
+                        Nothing ->
+                            ( model, Time.now |> Task.perform (FinishedDictation typing.errors typing.lesson typing.duration) )
 
                 _ ->
                     ( model, Cmd.none )
@@ -213,7 +216,7 @@ update msg model =
                 TypingPage typing ->
                     let
                         next =
-                            { typing | time = typing.time + tickDurationInSec }
+                            { typing | duration = typing.duration + ticksPerSecond }
                     in
                     ( { model | page = TypingPage next }, Cmd.none )
 
@@ -254,36 +257,46 @@ update msg model =
 
         SetUsername string ->
             case model.page of
-                LoginPage page ->
-                    ( { model | page = LoginPage { page | username = string } }, Cmd.none )
+                LoginAndRegisterPage page ->
+                    ( { model | page = LoginAndRegisterPage { page | username = string } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
         SetPassword string ->
             case model.page of
-                LoginPage page ->
-                    ( { model | page = LoginPage { page | password = string } }, Cmd.none )
+                LoginAndRegisterPage page ->
+                    ( { model | page = LoginAndRegisterPage { page | password = string } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
         SetVisibility bool ->
             case model.page of
-                LoginPage page ->
-                    ( { model | page = LoginPage { page | visibility = bool } }, Cmd.none )
+                LoginAndRegisterPage page ->
+                    ( { model | page = LoginAndRegisterPage { page | visibility = bool } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
         TryLogin username password ->
-            ( model, Lamdera.sendToBackend <| Login username password )
+            ( model, Lamdera.sendToBackend <| InsertSession username password )
 
         TryRegister username password ->
-            ( model, Lamdera.sendToBackend <| Register username password )
+            ( model, Lamdera.sendToBackend <| InsertUser username password )
 
         Logout ->
-            ( model, Lamdera.sendToBackend <| BackendLogout )
+            ( model, Lamdera.sendToBackend <| RemoveSession )
+
+        FinishedDictation errors lesson duration time ->
+            let
+                past : PastDictation
+                past =
+                    { errors = errors, lesson = lesson, duration = duration, finished = time }
+            in
+            ( { model | page = TypingStatisticPage past, statistic = past :: model.statistic }
+            , Lamdera.sendToBackend <| ConsStatistic past
+            )
 
 
 updateDictation : KeyboardKey -> Settings -> Typing -> Maybe Typing
@@ -334,10 +347,12 @@ updateDictation keyboardKey settings typing =
                 Just { typing | madeError = True, errors = typing.errors ++ [ { was = char, should = typing.dictation.current } ] }
 
             else
-                typing.dictation |> advanceDictation |> Maybe.map (\dictation -> { typing | dictation = dictation, madeError = False })
+                typing.dictation
+                    |> advanceDictation
+                    |> Maybe.map (\dictation -> { typing | dictation = dictation, madeError = False })
 
 
-bookToDictation : Book -> Dictation
+bookToDictation : Lesson -> Dictation
 bookToDictation book =
     let
         ( current, next ) =
@@ -352,7 +367,13 @@ advanceDictation : Dictation -> Maybe Dictation
 advanceDictation dict =
     dict.next
         |> String.uncons
-        |> Maybe.map (\( nextCurrent, next ) -> { prev = dict.prev ++ String.fromChar dict.current, current = nextCurrent, next = next })
+        |> Maybe.map
+            (\( nextCurrent, next ) ->
+                { prev = dict.prev ++ String.fromChar dict.current
+                , current = nextCurrent
+                , next = next
+                }
+            )
 
 
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
@@ -361,26 +382,37 @@ updateFromBackend msg model =
         GotSettings settings ->
             ( { model | settings = settings }, Cmd.none )
 
-        ThrowOut ->
-            ( { model | page = LoginPage emptyLoginPage }, Cmd.none )
+        KickOut ->
+            ( { model | page = LoginAndRegisterPage emptyLoginPage }, Cmd.none )
 
         LoginSuccessful ->
-            ( { model | page = MenuPage <| Menu Nothing }, Cmd.none )
+            ( { model | page = MenuPage <| Menu Nothing }, Cmd.batch [ Lamdera.sendToBackend GetSettings, Lamdera.sendToBackend GetStatistic ] )
 
         LoginFailed ->
             case model.page of
-                LoginPage page ->
-                    ( { model | page = LoginPage { page | failed = True } }, Cmd.none )
+                LoginAndRegisterPage page ->
+                    ( { model | page = LoginAndRegisterPage { page | failed = WrongUsernameOrPassword } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
+        RegisterFailed ->
+            case model.page of
+                LoginAndRegisterPage page ->
+                    ( { model | page = LoginAndRegisterPage { page | failed = UsernameOrPasswordInvalid } }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        UpdateStatistic pastDictations ->
+            ( { model | statistic = pastDictations }, Cmd.none )
+
 
 emptyLoginPage =
-    { username = "", password = "", visibility = False, failed = False }
+    { username = "", password = "", visibility = False, failed = NotAsked }
 
 
-tickDurationInSec =
+ticksPerSecond =
     0.1
 
 
@@ -395,7 +427,7 @@ subscriptions model =
                     Sub.none
 
                   else
-                    Time.every (tickDurationInSec * 1000) (\_ -> TickTypingTime)
+                    Time.every (ticksPerSecond * 1000) (\_ -> TickTypingTime)
                 ]
 
         _ ->
@@ -437,13 +469,34 @@ view model =
                 StatisticPage hover ->
                     viewStatistic hover model.statistic
 
-                LoginPage page ->
+                LoginAndRegisterPage page ->
                     viewLogin page
+
+        pageTitle =
+            case model.page of
+                MenuPage _ ->
+                    "Menu"
+
+                TypingPage _ ->
+                    "Typing"
+
+                TypingStatisticPage _ ->
+                    "Typing Statistic"
+
+                SettingsPage ->
+                    "Settings"
+
+                StatisticPage _ ->
+                    "Statistic"
+
+                LoginAndRegisterPage _ ->
+                    "Login"
     in
-    { title = "JTipp"
+    { title = pageTitle ++ " - " ++ "Neo Train"
     , body =
         [ ptMonoLink
         , styleTag
+        , iconTag
         , layout [ width fill, height fill, Background.color wheat, Font.color black ]
             (el
                 [ centerX, centerY, Border.color black, Border.width 1, padding appPadding, Border.rounded 16 ]
@@ -454,14 +507,37 @@ view model =
     }
 
 
-viewLogin { username, password, visibility } =
+viewLogin : LoginAndRegister -> Element FrontendMsg
+viewLogin { username, password, visibility, failed } =
     let
         inputStyle =
-            [ Background.color wheat, Border.width 1, Border.color black, Border.rounded 0 ]
+            [ width fill, Background.color wheat, Border.width 1, Border.color black, Border.rounded 0 ]
+
+        eyeButton =
+            Input.button [ height fill, padding 11, tooltip "Show password" ]
+                { label =
+                    materialIcon
+                        (if visibility then
+                            Icons.visibility_off
+
+                         else
+                            Icons.visibility
+                        )
+                , onPress = Just <| SetVisibility <| not visibility
+                }
     in
     column [ spacing 32 ]
         [ title "Login / Register"
-        , column [ spacing 8 ]
+        , case failed of
+            NotAsked ->
+                none
+
+            WrongUsernameOrPassword ->
+                el [ Font.color primary ] <| text "Wrong username or password!"
+
+            UsernameOrPasswordInvalid ->
+                paragraph [ Font.color primary, width (px 500) ] [ text "Username or password invalid. Username should be alphanumeric. Password should be length 10, alphanumeric with some special chars (IBM valid character)." ]
+        , column [ spacing 8, width fill ]
             [ subTitle "Username"
             , Input.username inputStyle
                 { text = username
@@ -470,32 +546,33 @@ viewLogin { username, password, visibility } =
                 , onChange = SetUsername
                 }
             ]
-        , column [ spacing 8 ]
+        , column [ spacing 8, width fill ]
             [ subTitle "Password"
-            , row []
-                [ Input.currentPassword inputStyle
-                    { text = password
-                    , label = Input.labelHidden "password"
-                    , placeholder = Nothing
-                    , onChange = SetPassword
-                    , show = visibility
-                    }
-                , Input.button [ height fill, padding 11, tooltip "Show password" ]
-                    { label =
-                        materialIcon
-                            (if visibility then
-                                Icons.visibility_off
-
-                             else
-                                Icons.visibility
-                            )
-                    , onPress = Just <| SetVisibility <| not visibility
-                    }
-                ]
+            , Input.currentPassword (inputStyle ++ [ inFront <| el [ alignRight ] <| eyeButton ])
+                { text = password
+                , label = Input.labelHidden "password"
+                , placeholder = Nothing
+                , onChange = SetPassword
+                , show = visibility
+                }
             ]
         , row [ spacing 16, width fill ]
-            [ Input.button [ width fill, Border.color black, Border.width 1, padding 8, mouseOver [ Background.color primary ] ] { label = el [ centerX ] <| text "Login", onPress = Just <| TryLogin username password }
-            , Input.button [ width fill, Border.color black, Border.width 1, padding 8, mouseOver [ Background.color primary ] ] { label = el [ centerX ] <| text "Register", onPress = Just <| TryRegister username password }
+            [ Input.button
+                [ width fill
+                , Border.color black
+                , Border.width 1
+                , padding 8
+                , mouseOver [ Background.color primary ]
+                ]
+                { label = el [ centerX ] <| text "Login", onPress = Just <| TryLogin username password }
+            , Input.button
+                [ width fill
+                , Border.color black
+                , Border.width 1
+                , padding 8
+                , mouseOver [ Background.color primary ]
+                ]
+                { label = el [ centerX ] <| text "Register", onPress = Just <| TryRegister username password }
             ]
         ]
 
@@ -505,7 +582,11 @@ appPadding =
 
 
 ptMonoLink =
-    Html.node "link" [ Html.Attributes.href "https://fonts.googleapis.com/css2?family=PT+Mono&display=swap", Html.Attributes.rel "stylesheet" ] []
+    Html.node "link"
+        [ Html.Attributes.href "https://fonts.googleapis.com/css2?family=PT+Mono&display=swap"
+        , Html.Attributes.rel "stylesheet"
+        ]
+        []
 
 
 {-| this changes the sidebar to look more like the theme
@@ -527,6 +608,12 @@ styleTag =
         ]
 
 
+iconTag =
+    Html.node "link"
+        [ Html.Attributes.rel "shortcut icon", Html.Attributes.type_ "image/x-icon", Html.Attributes.href "/favicon.svg" ]
+        []
+
+
 
 -- Menu
 
@@ -544,7 +631,15 @@ viewMenu model menu =
                         [ block "Char count" <| text <| String.fromInt <| String.length book.content
                         , block "Word count" <| text <| String.fromInt <| List.length <| String.split " " <| book.content
                         , block "Preview" <| paragraph [ width (px 400), height fill ] [ text (book.content |> truncate 140) ]
-                        , Input.button [ alignRight, alignBottom, Border.color black, Border.width 1, padding 8, mouseOver [ Background.color primary ] ] { onPress = Just (OpenBook book), label = text "Start" }
+                        , Input.button
+                            [ alignRight
+                            , alignBottom
+                            , Border.color black
+                            , Border.width 1
+                            , padding 8
+                            , mouseOver [ Background.color primary ]
+                            ]
+                            { onPress = Just (OpenBook book), label = text "Start" }
                         ]
 
                 Nothing ->
@@ -565,7 +660,7 @@ viewMenu model menu =
         ]
 
 
-viewMenuItem : Book -> Element FrontendMsg
+viewMenuItem : Lesson -> Element FrontendMsg
 viewMenuItem book =
     let
         charsPerSecond =
@@ -618,7 +713,7 @@ viewSettings settings =
     column [ inFront <| topBar, spacing 48 ]
         [ title "Settings"
         , settingsBlock
-            "Layout"
+            "Layout Preview"
             (column [ width fill, Border.color black, Border.width 1 ]
                 (layouts |> List.map (\( name, layout ) -> layoutSettingItem name layout))
             )
@@ -628,10 +723,11 @@ viewSettings settings =
                 , blockSettingItem "Waiting for the correct letter" CorrectLetter
                 ]
             )
-        , settingsBlock "Padding left" <|
-            paddingSlider settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = round value })
-        , settingsBlock "Padding right" <|
-            paddingSlider settings.paddingRight (\value -> SetSettings { settings | paddingRight = round value })
+        , settingsBlock "Chars left and right of cursor" <|
+            column [ width fill, spacing 8 ]
+                [ paddingSlider settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = round value })
+                , paddingSlider settings.paddingRight (\value -> SetSettings { settings | paddingRight = round value })
+                ]
         ]
 
 
@@ -690,7 +786,10 @@ viewTyping { dictation, layer, madeError, paused } settings =
                 ]
 
         pausedEl =
-            el [ centerX, monospace, Font.size 32 ] <| text <| String.pad (settings.paddingLeft + settings.paddingRight + 1) ' ' <| "Paused. Press Any Key"
+            el [ centerX, monospace, Font.size 32 ] <|
+                text <|
+                    String.pad (settings.paddingLeft + settings.paddingRight + 1) ' ' <|
+                        "Paused. Press Any Key"
     in
     column
         [ spacing 64
@@ -749,7 +848,7 @@ layerUrl layout layer =
 
 
 viewStatistic : Maybe PastDictation -> List PastDictation -> Element FrontendMsg
-viewStatistic hovering pastDictations =
+viewStatistic hovering statistic =
     let
         viewPast : PastDictation -> Element FrontendMsg
         viewPast past =
@@ -766,7 +865,7 @@ viewStatistic hovering pastDictations =
                             []
                        )
                 )
-                { label = text <| (String.fromInt <| points past) ++ "\t" ++ past.book.title
+                { label = text <| (String.fromInt <| points past) ++ "\t" ++ past.lesson.title
                 , onPress = Just (ToTypingStatistic past)
                 }
 
@@ -774,19 +873,20 @@ viewStatistic hovering pastDictations =
             case hovering of
                 Just h ->
                     column [ spacing 8 ]
-                        [ text h.book.title
+                        [ text h.lesson.title
                         , text <| "Points: " ++ (String.fromInt <| points h)
                         ]
 
                 Nothing ->
-                    none
+                    -- placeholder because of hover jitter
+                    column [ spacing 8 ] [ text " ", text " " ]
     in
     column [ inFront <| el [ moveLeft (appPadding + 21), moveUp (appPadding + 21) ] <| backButton, spacing 48, width fill ]
         [ title "Statistic"
         , row [ width fill, spacing 48 ]
             [ column [ spacing 8, width fill, alignTop ]
                 [ subTitle "Past Dictations"
-                , if List.isEmpty pastDictations then
+                , if List.isEmpty statistic then
                     info "You have no past dictations"
 
                   else
@@ -800,9 +900,9 @@ viewStatistic hovering pastDictations =
                             , Element.Events.onMouseLeave <| OnHover <| Nothing
                             ]
                         <|
-                            List.map viewPast (List.reverse pastDictations)
+                            List.map viewPast statistic
                 ]
-            , column [ spacing 8, alignTop ] [ subTitle "Point Progression", viewPointsGraph hovering pastDictations, viewHover ]
+            , column [ spacing 8, alignTop ] [ subTitle "Point Progression", viewPointsGraph hovering statistic, viewHover ]
             ]
         ]
 
@@ -811,9 +911,9 @@ points : PastDictation -> Int
 points past =
     let
         err =
-            toFloat (List.length past.errors) / toFloat (String.length past.book.content)
+            toFloat (List.length past.errors) / toFloat (String.length past.lesson.content)
     in
-    max 0 <| round <| ((charsPerMinute past.book past.duration / 5) - (err * 5)) * 10
+    max 0 <| round <| ((charsPerMinute past.lesson past.duration / 5) - (err * 5)) * 10
 
 
 wordsPerMinute book duration =
@@ -844,16 +944,16 @@ info labelText =
 
 errorPercent { content } errors =
     let
-        perc =
+        percent =
             round ((toFloat (List.length errors) / toFloat (String.length content)) * 100)
     in
-    String.fromInt perc ++ "%"
+    String.fromInt percent ++ "%"
 
 
 viewTypingStatistic : PastDictation -> Element FrontendMsg
 viewTypingStatistic past =
     let
-        { book, errors, duration } =
+        { lesson, errors, duration } =
             past
 
         grouped =
@@ -869,20 +969,20 @@ viewTypingStatistic past =
             row [ centerX, spacing 16, alignBottom, moveDown (appPadding + 21) ]
                 [ homeButton
                 , statisticButton
-                , button (Just <| OpenBook book) (materialIcon Icons.refresh) 'r'
+                , button (Just <| OpenBook lesson) (materialIcon Icons.refresh) 'r'
                 ]
         ]
         [ title "Your Typing Statistic"
         , column [ spacing 8 ]
             [ subTitle "Time"
             , text <| "Duration: " ++ printSeconds duration
-            , text <| "Chars per Minute: " ++ (String.fromInt <| round <| charsPerMinute book duration)
-            , text <| "Words per Minute: " ++ (String.fromInt <| round <| wordsPerMinute book duration)
+            , text <| "Chars per Minute: " ++ (String.fromInt <| round <| charsPerMinute lesson duration)
+            , text <| "Words per Minute: " ++ (String.fromInt <| round <| wordsPerMinute lesson duration)
             ]
         , column [ spacing 8 ]
             [ subTitle "Errors Rate"
             , text <| "Count: " ++ String.fromInt (List.length errors)
-            , text <| "Percent: " ++ errorPercent book errors
+            , text <| "Percent: " ++ errorPercent lesson errors
             ]
         , column [ spacing 8 ]
             [ subTitle "Errors"
@@ -950,8 +1050,6 @@ viewPointsGraph hovering dictations =
     let
         items =
             dictations
-                |> List.indexedMap Tuple.pair
-                |> List.reverse
                 |> List.take 15
                 |> List.reverse
     in
@@ -962,14 +1060,10 @@ viewPointsGraph hovering dictations =
                  , CA.width 300
                  , CA.margin { top = 8, bottom = 32, left = 48, right = 8 }
                  , CA.padding { top = 4, bottom = 4, left = 4, right = 4 }
-                 , CE.onMouseMove (List.map (CI.getData >> Tuple.second) >> List.head >> OnHover) (CE.getNearest CI.dots)
+                 , CE.onMouseMove (List.map CI.getData >> List.head >> OnHover) (CE.getNearest CI.dots)
                  , CE.onMouseLeave (OnHover Nothing)
                  , CE.onMouseUp
-                    (List.map (CI.getData >> Tuple.second)
-                        >> List.head
-                        >> Maybe.map ToTypingStatistic
-                        >> Maybe.withDefault NoOpFrontendMsg
-                    )
+                    (List.map CI.getData >> List.head >> Maybe.map ToTypingStatistic >> Maybe.withDefault NoOpFrontendMsg)
                     (CE.getNearest CI.dots)
                  ]
                     ++ (if hovering == Nothing then
@@ -982,11 +1076,11 @@ viewPointsGraph hovering dictations =
                 [ C.yTicks [ CA.color (toHex black) ]
                 , C.yLabels [ CA.color (toHex black) ]
                 , C.grid [ CA.color (toHex secondary) ]
-                , C.series (Tuple.first >> toFloat)
-                    [ C.interpolated (Tuple.second >> points >> toFloat) [ CA.color <| toHex primary, CA.width 4 ] []
+                , C.series (.finished >> Time.posixToMillis >> toFloat)
+                    [ C.interpolated (points >> toFloat) [ CA.color <| toHex primary, CA.width 4 ] []
                         |> C.variation
                             (\_ data ->
-                                if Just (Tuple.second data) == hovering then
+                                if Just data == hovering then
                                     [ CA.circle, CA.size 48, CA.color (toHex primary) ]
 
                                 else
@@ -995,6 +1089,29 @@ viewPointsGraph hovering dictations =
                     ]
                     items
                 ]
+
+
+bucketStatistic : List PastDictation -> Dict Int (List PastDictation)
+bucketStatistic pastDictations =
+    let
+        insert : PastDictation -> Dict Int (List PastDictation) -> Dict Int (List PastDictation)
+        insert pastDictation dict =
+            let
+                key =
+                    posixToDay pastDictation.finished
+            in
+            if Dict.member key dict then
+                Dict.update key (Maybe.map (\v -> pastDictation :: v)) dict
+
+            else
+                Dict.insert key [ pastDictation ] dict
+    in
+    pastDictations |> List.foldl insert Dict.empty
+
+
+posixToDay : Posix -> Int
+posixToDay posix =
+    Time.posixToMillis posix // (1000 * 60 * 60 * 24)
 
 
 
@@ -1067,12 +1184,12 @@ button onPress label shortcut =
          , padding 8
          , mouseOver [ Background.color primary ]
          ]
-            ++ accesskey shortcut
+            ++ accessKey shortcut
         )
         { label = label, onPress = onPress }
 
 
-accesskey key =
+accessKey key =
     [ htmlAttribute (Html.Attributes.accesskey key)
     , tooltip <| "Shortcut: <Alt-" ++ String.toUpper (String.fromChar key) ++ ">"
     ]

@@ -4,6 +4,7 @@ import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
+import Time exposing (Posix)
 import Url exposing (Url)
 
 
@@ -13,7 +14,7 @@ import Url exposing (Url)
 
 type alias FrontendModel =
     { key : Key
-    , items : List Book
+    , items : List Lesson
     , page : Page
     , settings : Settings
     , statistic : List PastDictation
@@ -21,11 +22,11 @@ type alias FrontendModel =
 
 
 type alias Menu =
-    { current : Maybe Book
+    { current : Maybe Lesson
     }
 
 
-type alias Book =
+type alias Lesson =
     { title : String, content : String }
 
 
@@ -34,8 +35,8 @@ type alias Typing =
     , madeError : Bool
     , errors : List TypeError
     , layer : Int
-    , book : Book
-    , time : Float
+    , lesson : Lesson
+    , duration : Float
     , paused : Bool
     }
 
@@ -55,8 +56,9 @@ type alias Dictation =
 
 type alias PastDictation =
     { errors : List TypeError
-    , book : Book
+    , lesson : Lesson
     , duration : Float
+    , finished : Posix
     }
 
 
@@ -66,11 +68,12 @@ type alias BackendModel =
     { currentSaltIndex : Int
     , passiveUsers : Dict Username User
     , activeSessions : Dict SessionId Session
+    , currentTime : Posix
     }
 
 
 type alias Session =
-    { user : User }
+    { user : User, created : Posix }
 
 
 type alias User =
@@ -78,6 +81,7 @@ type alias User =
     , passwordHash : String
     , passwordSalt : String
     , settings : Settings
+    , pastDictations : List PastDictation
     }
 
 
@@ -102,8 +106,8 @@ type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
     | NoOpFrontendMsg
-    | PreviewBook Book
-    | OpenBook Book
+    | PreviewBook Lesson
+    | OpenBook Lesson
     | ToMenu
     | KeyDown KeyboardKey
     | KeyUp KeyboardKey
@@ -121,26 +125,32 @@ type FrontendMsg
     | TryLogin String String
     | TryRegister String String
     | Logout
+    | FinishedDictation (List TypeError) Lesson Float Posix
 
 
 type BackendMsg
-    = Never
+    = TimeTick Posix
 
 
 type ToBackend
     = UpdateSettings Settings
     | GetSettings
-    | Register String String
-    | Login String String
-    | SessionCheck
-    | BackendLogout
+    | InsertUser Username String
+      -- | RemoveUser
+    | InsertSession Username String
+    | GetSession
+    | RemoveSession
+    | ConsStatistic PastDictation
+    | GetStatistic
 
 
 type ToFrontend
     = GotSettings Settings
-    | ThrowOut
+    | KickOut
+    | RegisterFailed
     | LoginSuccessful
     | LoginFailed
+    | UpdateStatistic (List PastDictation)
 
 
 
@@ -153,15 +163,21 @@ type Page
     | TypingStatisticPage PastDictation
     | SettingsPage
     | StatisticPage (Maybe PastDictation)
-    | LoginPage LoginState
+    | LoginAndRegisterPage LoginAndRegister
 
 
-type alias LoginState =
+type alias LoginAndRegister =
     { username : String
     , password : String
     , visibility : Bool
-    , failed : Bool
+    , failed : LoginFail
     }
+
+
+type LoginFail
+    = NotAsked
+    | WrongUsernameOrPassword
+    | UsernameOrPasswordInvalid
 
 
 type WaitingFor
@@ -187,4 +203,4 @@ type KeyboardKey
 
 defaultSettings : Settings
 defaultSettings =
-    { blockOnError = CorrectLetter, fontSize = 32, paddingLeft = 20, paddingRight = 20, layout = NeoQwertz }
+    { blockOnError = CorrectLetter, fontSize = 32, paddingLeft = 20, paddingRight = 20, layout = Neo }
