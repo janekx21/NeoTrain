@@ -62,6 +62,10 @@ type alias PastDictation =
     }
 
 
+type alias Bucket =
+    List PastDictation
+
+
 {-| String that only allows chars and numbers
 -}
 type alias BackendModel =
@@ -118,7 +122,7 @@ type FrontendMsg
     | TickTypingTime
     | Pause
     | Play
-    | OnHover (Maybe PastDictation)
+    | OnHover Hover
     | SetUsername String
     | SetPassword String
     | SetVisibility Bool
@@ -126,6 +130,10 @@ type FrontendMsg
     | TryRegister String String
     | Logout
     | FinishedDictation (List TypeError) Lesson Float Posix
+
+
+type alias Hover =
+    Bucket
 
 
 type BackendMsg
@@ -162,7 +170,7 @@ type Page
     | TypingPage Typing
     | TypingStatisticPage PastDictation
     | SettingsPage
-    | StatisticPage (Maybe PastDictation)
+    | StatisticPage Hover
     | LoginAndRegisterPage LoginAndRegister
 
 

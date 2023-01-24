@@ -21,6 +21,7 @@ import Lamdera
 import Lamdera.Json as Decode exposing (Decoder)
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..), Icon)
+import Set exposing (Set)
 import Task
 import Time exposing (Posix)
 import Types exposing (..)
@@ -206,7 +207,7 @@ update msg model =
             ( { model | settings = settings }, Lamdera.sendToBackend <| UpdateSettings settings )
 
         ToStatistic ->
-            ( { model | page = StatisticPage Nothing }, Cmd.none )
+            ( { model | page = StatisticPage [] }, Cmd.none )
 
         ToTypingStatistic past ->
             ( { model | page = TypingStatisticPage past }, Cmd.none )
@@ -558,20 +559,10 @@ viewLogin { username, password, visibility, failed } =
             ]
         , row [ spacing 16, width fill ]
             [ Input.button
-                [ width fill
-                , Border.color black
-                , Border.width 1
-                , padding 8
-                , mouseOver [ Background.color primary ]
-                ]
+                ([ width fill ] ++ buttonAttributes)
                 { label = el [ centerX ] <| text "Login", onPress = Just <| TryLogin username password }
             , Input.button
-                [ width fill
-                , Border.color black
-                , Border.width 1
-                , padding 8
-                , mouseOver [ Background.color primary ]
-                ]
+                ([ width fill ] ++ buttonAttributes)
                 { label = el [ centerX ] <| text "Register", onPress = Just <| TryRegister username password }
             ]
         ]
@@ -644,11 +635,8 @@ viewMenu model menu =
 
                 Nothing ->
                     none
-
-        topBar =
-            row [ spacing 16, alignRight, moveRight (appPadding + 21), moveUp (appPadding + 21) ] [ statisticButton, settingsButton ]
     in
-    column [ spacing 32, inFront <| topBar ]
+    column [ spacing 32, topRightBar [ statisticButton, settingsButton ] ]
         [ title "Dictations"
         , row
             [ spacing 40 ]
@@ -667,7 +655,7 @@ viewMenuItem book =
             5
     in
     Input.button
-        [ width fill, padding 8, mouseOver [ Background.color primary ] ]
+        ([ width fill ] ++ itemAttributes)
         { label = text (book.title ++ " (" ++ printSeconds ((book.content |> String.length |> toFloat) / charsPerSecond) ++ ")")
         , onPress = Just <| PreviewBook book
         }
@@ -691,26 +679,8 @@ viewSettings settings =
 
         layoutSettingItem label setting =
             viewSettingsItem label (SetSettings { settings | layout = setting }) (settings.layout == setting)
-
-        paddingSlider value msg =
-            row [ width fill, spacing 8 ]
-                [ el [ monospace ] <| text <| String.padLeft 2 ' ' (String.fromInt value)
-                , el [ width fill, Border.color black, Border.width 1 ] <|
-                    Input.slider [ width fill ]
-                        { onChange = msg
-                        , label = Input.labelHidden ""
-                        , min = 0
-                        , max = 50
-                        , value = toFloat value
-                        , thumb = Input.thumb [ width (px 20), height (px 20), Background.color black ]
-                        , step = Just 1
-                        }
-                ]
-
-        topBar =
-            row [ moveLeft (appPadding + 21), moveUp (appPadding + 21), spacing 8 ] [ backButton, logoutButton ]
     in
-    column [ inFront <| topBar, spacing 48 ]
+    column [ topLeftBar [ backButton, logoutButton ], spacing 48 ]
         [ title "Settings"
         , settingsBlock
             "Layout Preview"
@@ -725,15 +695,37 @@ viewSettings settings =
             )
         , settingsBlock "Chars left and right of cursor" <|
             column [ width fill, spacing 8 ]
-                [ paddingSlider settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = round value })
-                , paddingSlider settings.paddingRight (\value -> SetSettings { settings | paddingRight = round value })
+                [ slider 0 50 settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = value })
+                , slider 0 50 settings.paddingRight (\value -> SetSettings { settings | paddingRight = value })
                 ]
+        ]
+
+
+slider : Float -> Float -> Int -> (Int -> msg) -> Element msg
+slider min max value msg =
+    let
+        padding =
+            logBase 10 max |> ceiling
+    in
+    row [ width fill, spacing 8 ]
+        [ el [ monospace ] <| text <| String.padLeft padding ' ' (String.fromInt value)
+        , el [ width fill, Border.color black, Border.width 1 ] <|
+            Input.slider [ width fill ]
+                { onChange = round >> msg
+                , label = Input.labelHidden ""
+                , min = min
+                , max = max
+                , value = toFloat value
+                , thumb = Input.thumb [ width (px 20), height (px 20), Background.color black ]
+                , step = Just 1
+                }
         ]
 
 
 viewSettingsItem labelText msg active =
     Input.button
-        ([ width fill, padding 8, mouseOver [ Background.color primary ] ]
+        ([ width fill ]
+            ++ itemAttributes
             ++ (if active then
                     [ Background.color secondary, Font.color wheat ]
 
@@ -793,15 +785,14 @@ viewTyping { dictation, layer, madeError, paused } settings =
     in
     column
         [ spacing 64
-        , inFront <|
-            row [ moveLeft (appPadding + 21), moveUp (appPadding + 21), spacing 8 ]
-                [ backButton
-                , if paused then
-                    playButton
+        , topLeftBar
+            [ backButton
+            , if paused then
+                playButton
 
-                  else
-                    pauseButton
-                ]
+              else
+                pauseButton
+            ]
         ]
         [ if paused then
             pausedEl
@@ -847,18 +838,17 @@ layerUrl layout layer =
 -- Statistic
 
 
-viewStatistic : Maybe PastDictation -> List PastDictation -> Element FrontendMsg
+viewStatistic : Hover -> List PastDictation -> Element FrontendMsg
 viewStatistic hovering statistic =
     let
         viewPast : PastDictation -> Element FrontendMsg
         viewPast past =
             Input.button
                 ([ width fill
-                 , padding 8
-                 , mouseOver [ Background.color primary ]
-                 , Element.Events.onMouseEnter <| OnHover <| Just past
+                 , Element.Events.onMouseEnter <| OnHover [ past ]
                  ]
-                    ++ (if Just past == hovering then
+                    ++ itemAttributes
+                    ++ (if List.member past hovering then
                             [ Background.color primary ]
 
                         else
@@ -870,7 +860,7 @@ viewStatistic hovering statistic =
                 }
 
         viewHover =
-            case hovering of
+            case median hovering of
                 Just h ->
                     column [ spacing 8 ]
                         [ text h.lesson.title
@@ -881,7 +871,7 @@ viewStatistic hovering statistic =
                     -- placeholder because of hover jitter
                     column [ spacing 8 ] [ text " ", text " " ]
     in
-    column [ inFront <| el [ moveLeft (appPadding + 21), moveUp (appPadding + 21) ] <| backButton, spacing 48, width fill ]
+    column [ topLeftBar [ backButton ], spacing 48, width fill ]
         [ title "Statistic"
         , row [ width fill, spacing 48 ]
             [ column [ spacing 8, width fill, alignTop ]
@@ -890,14 +880,14 @@ viewStatistic hovering statistic =
                     info "You have no past dictations"
 
                   else
-                    el [] <|
+                    el [ width fill ] <|
                         column
                             [ width fill
                             , height (fill |> maximum 512)
                             , scrollbarY
                             , Border.width 1
                             , Border.color black
-                            , Element.Events.onMouseLeave <| OnHover <| Nothing
+                            , Element.Events.onMouseLeave <| OnHover <| []
                             ]
                         <|
                             List.map viewPast statistic
@@ -965,12 +955,8 @@ viewTypingStatistic past =
     in
     column
         [ spacing 48
-        , inFront <|
-            row [ centerX, spacing 16, alignBottom, moveDown (appPadding + 21) ]
-                [ homeButton
-                , statisticButton
-                , button (Just <| OpenBook lesson) (materialIcon Icons.refresh) 'r'
-                ]
+        , topLeftBar [ homeButton, statisticButton ]
+        , bottomCenterBar [ button (Just <| OpenBook lesson) (materialIcon Icons.refresh) 'r' ]
         ]
         [ title "Your Typing Statistic"
         , column [ spacing 8 ]
@@ -996,8 +982,19 @@ viewTypingStatistic past =
             [ subTitle "Points"
             , text <| String.fromInt <| points past
             ]
-        , el [] none -- blocker
         ]
+
+
+topLeftBar =
+    inFront << row [ moveUp (appPadding + 21), moveLeft (appPadding + 21), spacing 16 ]
+
+
+topRightBar =
+    inFront << row [ moveUp (appPadding + 21), moveRight (appPadding + 21), spacing 16, alignRight ]
+
+
+bottomCenterBar =
+    inFront << row [ moveDown (appPadding + 21), spacing 16, centerX, alignBottom ]
 
 
 viewChar char =
@@ -1045,13 +1042,13 @@ viewError ( char, typeErrors ) =
         ]
 
 
-viewPointsGraph : Maybe PastDictation -> List PastDictation -> Element FrontendMsg
+viewPointsGraph : Hover -> List PastDictation -> Element FrontendMsg
 viewPointsGraph hovering dictations =
     let
         items =
             dictations
-                |> List.take 15
-                |> List.reverse
+                |> bucketStatistic
+                |> Dict.toList
     in
     el [ width <| px 300, height fill ] <|
         html <|
@@ -1060,13 +1057,13 @@ viewPointsGraph hovering dictations =
                  , CA.width 300
                  , CA.margin { top = 8, bottom = 32, left = 48, right = 8 }
                  , CA.padding { top = 4, bottom = 4, left = 4, right = 4 }
-                 , CE.onMouseMove (List.map CI.getData >> List.head >> OnHover) (CE.getNearest CI.dots)
-                 , CE.onMouseLeave (OnHover Nothing)
+                 , CE.onMouseMove (List.concatMap (CI.getData >> Tuple.second) >> OnHover) (CE.getNearest CI.dots)
+                 , CE.onMouseLeave (OnHover [])
                  , CE.onMouseUp
-                    (List.map CI.getData >> List.head >> Maybe.map ToTypingStatistic >> Maybe.withDefault NoOpFrontendMsg)
+                    (List.concatMap (CI.getData >> Tuple.second) >> median >> Maybe.map ToTypingStatistic >> Maybe.withDefault NoOpFrontendMsg)
                     (CE.getNearest CI.dots)
                  ]
-                    ++ (if hovering == Nothing then
+                    ++ (if List.isEmpty hovering then
                             []
 
                         else
@@ -1076,11 +1073,15 @@ viewPointsGraph hovering dictations =
                 [ C.yTicks [ CA.color (toHex black) ]
                 , C.yLabels [ CA.color (toHex black) ]
                 , C.grid [ CA.color (toHex secondary) ]
-                , C.series (.finished >> Time.posixToMillis >> toFloat)
-                    [ C.interpolated (points >> toFloat) [ CA.color <| toHex primary, CA.width 4 ] []
+                , C.series (Tuple.first >> toFloat)
+                    [ C.interpolated (Tuple.second >> medianPoints >> toFloat) [ CA.color <| toHex primary, CA.width 4 ] [ CA.circle, CA.size 8 ]
                         |> C.variation
                             (\_ data ->
-                                if Just data == hovering then
+                                let
+                                    createSet a =
+                                        a |> List.map .finished |> List.map Time.posixToMillis |> Set.fromList
+                                in
+                                if haveCommon (hovering |> createSet) (data |> Tuple.second |> createSet) then
                                     [ CA.circle, CA.size 48, CA.color (toHex primary) ]
 
                                 else
@@ -1091,14 +1092,42 @@ viewPointsGraph hovering dictations =
                 ]
 
 
-bucketStatistic : List PastDictation -> Dict Int (List PastDictation)
+haveCommon : Set comparable -> Set comparable -> Bool
+haveCommon a b =
+    not (Set.isEmpty (Set.intersect a b))
+
+
+median : List PastDictation -> Maybe PastDictation
+median pastDictations =
+    let
+        sorted =
+            List.sortBy points pastDictations
+    in
+    sorted
+        |> List.drop (List.length sorted // 2)
+        |> List.head
+
+
+medianPoints : List PastDictation -> Int
+medianPoints pastDictations =
+    pastDictations
+        |> median
+        |> Maybe.map points
+        |> Maybe.withDefault 0
+
+
+bucketStatistic : List PastDictation -> Dict Int Bucket
 bucketStatistic pastDictations =
     let
-        insert : PastDictation -> Dict Int (List PastDictation) -> Dict Int (List PastDictation)
+        insert : PastDictation -> Dict Int Bucket -> Dict Int Bucket
         insert pastDictation dict =
             let
+                posixToBucketKey : Posix -> Int
+                posixToBucketKey posix =
+                    Time.posixToMillis posix // (1000 * 60 * 10)
+
                 key =
-                    posixToDay pastDictation.finished
+                    posixToBucketKey pastDictation.finished
             in
             if Dict.member key dict then
                 Dict.update key (Maybe.map (\v -> pastDictation :: v)) dict
@@ -1107,11 +1136,6 @@ bucketStatistic pastDictations =
                 Dict.insert key [ pastDictation ] dict
     in
     pastDictations |> List.foldl insert Dict.empty
-
-
-posixToDay : Posix -> Int
-posixToDay posix =
-    Time.posixToMillis posix // (1000 * 60 * 60 * 24)
 
 
 
@@ -1177,16 +1201,25 @@ homeButton =
 
 button onPress label shortcut =
     Input.button
-        ([ Background.color wheat
-         , Border.color black
-         , Border.width 1
-         , Border.rounded 999
-         , padding 8
-         , mouseOver [ Background.color primary ]
-         ]
+        ([ Border.rounded 999 ]
+            ++ buttonAttributes
             ++ accessKey shortcut
         )
         { label = label, onPress = onPress }
+
+
+buttonAttributes =
+    [ Border.color black
+    , Border.width 1
+    ]
+        ++ itemAttributes
+
+
+itemAttributes =
+    [ padding 8
+    , Background.color wheat
+    , mouseOver [ Background.color primary, Font.color wheat ]
+    ]
 
 
 accessKey key =
