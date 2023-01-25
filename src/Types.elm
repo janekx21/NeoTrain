@@ -100,6 +100,7 @@ type alias Settings =
     , paddingLeft : Int
     , paddingRight : Int
     , layout : Layout
+    , theme : Theme
     }
 
 
@@ -213,4 +214,22 @@ type KeyboardKey
 
 defaultSettings : Settings
 defaultSettings =
-    { blockOnError = CorrectLetter, fontSize = 32, paddingLeft = 20, paddingRight = 20, layout = Neo }
+    { blockOnError = CorrectLetter
+    , fontSize = 32
+    , paddingLeft = 20
+    , paddingRight = 20
+    , layout = Neo
+    , theme = ElectricFields
+    }
+
+
+type Theme
+    = WheatField
+    | ElectricFields
+
+
+type NamedColor
+    = Primary
+    | Secondary
+    | White
+    | Black

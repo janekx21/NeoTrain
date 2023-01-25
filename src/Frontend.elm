@@ -110,6 +110,12 @@ layouts =
     ]
 
 
+themes =
+    [ ( "WheatField", WheatField )
+    , ( "ElectricFields", ElectricFields )
+    ]
+
+
 
 -- Update
 
@@ -462,25 +468,28 @@ keyDecoder =
 view : Model -> Browser.Document FrontendMsg
 view model =
     let
+        t =
+            model.settings.theme
+
         body =
             case model.page of
                 MenuPage menu ->
-                    viewMenu model menu
+                    viewMenu t model menu
 
                 TypingPage typing ->
-                    viewTyping typing model.settings
+                    viewTyping t typing model.settings
 
                 TypingStatisticPage past ->
-                    viewTypingStatistic past
+                    viewTypingStatistic t past
 
                 SettingsPage ->
-                    viewSettings model.settings
+                    viewSettings t model.settings
 
                 StatisticPage hover ->
-                    viewStatistic hover model.statistic
+                    viewStatistic t hover model.statistic
 
                 LoginAndRegisterPage page ->
-                    viewLogin page
+                    viewLogin t page
 
         pageTitle =
             case model.page of
@@ -505,22 +514,22 @@ view model =
     { title = pageTitle ++ " - " ++ "Neo Train"
     , body =
         [ ptMonoLink
-        , styleTag
+        , styleTag t
         , iconTag
         , layoutWith
             { options =
                 [ focusStyle
                     { backgroundColor = Nothing
-                    , borderColor = Nothing
-                    , shadow = Just { color = primary, offset = ( 0, 0 ), blur = 0, size = 4 }
+                    , borderColor = Just <| wheat t
+                    , shadow = Just { color = primary t, offset = ( 0, 0 ), blur = 0, size = 4 }
                     }
                 ]
             }
-            [ width fill, height fill, Background.color wheat, Font.color black ]
+            [ width fill, height fill, Background.color <| wheat t, Font.color <| black t ]
             (el
                 [ centerX
                 , centerY
-                , Border.color black
+                , Border.color <| black t
                 , Border.width 1
                 , padding appPadding
                 , Border.rounded 16
@@ -542,11 +551,11 @@ view model =
     }
 
 
-viewLogin : LoginAndRegister -> Element FrontendMsg
-viewLogin { username, password, visibility, failed } =
+viewLogin : Theme -> LoginAndRegister -> Element FrontendMsg
+viewLogin t { username, password, visibility, failed } =
     let
         inputStyle =
-            [ width fill, Background.color wheat, Border.width 1, Border.color black, Border.rounded 0 ]
+            [ width fill, Background.color <| wheat t, Border.width 1, Border.color <| black t, Border.rounded 0 ]
 
         eyeButton =
             Input.button [ height fill, padding 10, tooltip "Show password" ]
@@ -568,10 +577,10 @@ viewLogin { username, password, visibility, failed } =
                 none
 
             WrongUsernameOrPassword ->
-                el [ Font.color primary ] <| text "Wrong username or password!"
+                el [ Font.color <| primary t ] <| text "Wrong username or password!"
 
             UsernameOrPasswordInvalid ->
-                paragraph [ Font.color primary, width (px 500) ] [ text "Username or password invalid. Username should be alphanumeric. Password should be length 10, alphanumeric with some special chars (IBM valid character)." ]
+                paragraph [ Font.color <| primary t, width (px 500) ] [ text "Username or password invalid. Username should be alphanumeric. Password should be length 10, alphanumeric with some special chars (IBM valid character)." ]
         , column [ spacing 8, width fill ]
             [ subTitle "Username"
             , Input.username inputStyle
@@ -593,10 +602,10 @@ viewLogin { username, password, visibility, failed } =
             ]
         , row [ spacing 16, width fill ]
             [ Input.button
-                ([ width fill ] ++ buttonAttributes)
+                ([ width fill ] ++ buttonAttributes t)
                 { label = el [ centerX ] <| text "Login", onPress = Just <| TryLogin username password }
             , Input.button
-                ([ width fill ] ++ buttonAttributes)
+                ([ width fill ] ++ buttonAttributes t)
                 { label = el [ centerX ] <| text "Register", onPress = Just <| TryRegister username password }
             ]
         ]
@@ -616,18 +625,18 @@ ptMonoLink =
 
 {-| this changes the sidebar to look more like the theme
 -}
-styleTag =
+styleTag t =
     Html.node "style"
         []
-        [ Html.text """
+        [ Html.text <| """
 *::-webkit-scrollbar {
     width: 24px;
 }
 *::-webkit-scrollbar-track {
-    border-left: 1px solid black;
+    border-left: 1px solid """ ++ (toHex <| black t) ++ """;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: black;
+  background-color: """ ++ (toHex <| black t) ++ """;
 }
 """
         ]
@@ -643,8 +652,8 @@ iconTag =
 -- Menu
 
 
-viewMenu : Model -> Menu -> Element FrontendMsg
-viewMenu model menu =
+viewMenu : Theme -> Model -> Menu -> Element FrontendMsg
+viewMenu t model menu =
     let
         block label child =
             column [ spacing 8 ] [ subTitle label, child ]
@@ -656,7 +665,7 @@ viewMenu model menu =
                         [ block "Char count" <| text <| String.fromInt <| String.length lesson.content
                         , block "Word count" <| text <| String.fromInt <| List.length <| String.split " " <| lesson.content
                         , block "Preview" <| paragraph [ width (px 400), height fill ] [ text (lesson.content |> truncate 140) ]
-                        , el [ alignRight, alignBottom ] <| squareButton (OpenBook lesson) (text "Start") 'r'
+                        , el [ alignRight, alignBottom ] <| squareButton t (OpenBook lesson) (text "Start") 'r'
                         ]
 
                 Nothing ->
@@ -666,21 +675,24 @@ viewMenu model menu =
             model.statistic
                 |> List.filter (\p -> p.lesson == lesson)
                 |> List.length
+
+        settingsButton =
+            roundedButton t ToSettings (materialIcon Icons.settings) 's'
     in
-    column [ spacing 32, topRightBar [ statisticButton, settingsButton ] ]
+    column [ spacing 32, topRightBar [ statisticButton t, settingsButton ] ]
         [ title "Dictations"
         , row
             [ spacing 40 ]
             [ column
-                [ Border.color black, Border.width 1, height (fill |> maximum 512), scrollbarY, width fill ]
-                (model.items |> List.map (\l -> viewMenuItem (lessonDoneCount l) l))
+                [ Border.color <| black t, Border.width 1, height (fill |> maximum 512), scrollbarY, width fill ]
+                (model.items |> List.map (\l -> viewMenuItem t (lessonDoneCount l) l))
             , sidebar
             ]
         ]
 
 
-viewMenuItem : Int -> Lesson -> Element FrontendMsg
-viewMenuItem doneCount book =
+viewMenuItem : Theme -> Int -> Lesson -> Element FrontendMsg
+viewMenuItem t doneCount book =
     let
         charsPerSecond =
             5
@@ -696,7 +708,7 @@ viewMenuItem doneCount book =
                 none
     in
     Input.button
-        ([ width fill ] ++ itemAttributes)
+        ([ width fill ] ++ itemAttributes t)
         { label =
             row [ spacing 8 ]
                 [ text (book.title ++ " (" ++ printSeconds ((book.content |> String.length |> toFloat) / charsPerSecond) ++ ")")
@@ -710,8 +722,8 @@ viewMenuItem doneCount book =
 -- Settings
 
 
-viewSettings : Settings -> Element FrontendMsg
-viewSettings settings =
+viewSettings : Theme -> Settings -> Element FrontendMsg
+viewSettings t settings =
     let
         settingsBlock label child =
             column [ width fill, spacing 8 ]
@@ -720,59 +732,73 @@ viewSettings settings =
                 ]
 
         blockSettingItem label setting =
-            viewSettingsItem label (SetSettings { settings | blockOnError = setting }) (settings.blockOnError == setting)
+            viewSettingsItem t label (SetSettings { settings | blockOnError = setting }) (settings.blockOnError == setting)
 
         layoutSettingItem label setting =
-            viewSettingsItem label (SetSettings { settings | layout = setting }) (settings.layout == setting)
+            viewSettingsItem t label (SetSettings { settings | layout = setting }) (settings.layout == setting)
+
+        themeSettingItem label setting =
+            viewSettingsItem t label (SetSettings { settings | theme = setting }) (settings.theme == setting)
+
+        logoutButton =
+            roundedButton t Logout (materialIcon Icons.logout) 'l'
     in
-    column [ topLeftBar [ backButton, logoutButton ], spacing 48 ]
+    column [ topLeftBar [ backButton t, logoutButton ], spacing 48 ]
         [ title "Settings"
-        , settingsBlock
-            "Layout Preview"
-            (column [ width fill, Border.color black, Border.width 1 ]
-                (layouts |> List.map (\( name, layout ) -> layoutSettingItem name layout))
-            )
-        , settingsBlock "Blocking"
-            (column [ width fill, Border.color black, Border.width 1 ]
-                [ blockSettingItem "Waiting for one backspace" OneBackspace
-                , blockSettingItem "Waiting for the correct letter" CorrectLetter
+        , row [ spacing 48 ]
+            [ column
+                [ spacing 32, alignTop ]
+                [ settingsBlock "Layout Preview" <|
+                    column [ width fill, Border.color <| black t, Border.width 1 ]
+                        (layouts |> List.map (\( name, layout ) -> layoutSettingItem name layout))
+                , settingsBlock "Blocking"
+                    (column [ width fill, Border.color <| black t, Border.width 1 ]
+                        [ blockSettingItem "Waiting for one backspace" OneBackspace
+                        , blockSettingItem "Waiting for the correct letter" CorrectLetter
+                        ]
+                    )
                 ]
-            )
-        , settingsBlock "Chars left and right of cursor" <|
-            column [ width fill, spacing 8 ]
-                [ slider 0 50 settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = value })
-                , slider 0 50 settings.paddingRight (\value -> SetSettings { settings | paddingRight = value })
+            , column [ spacing 32, alignTop ]
+                [ settingsBlock "Chars left and right of cursor" <|
+                    column [ width fill, spacing 8 ]
+                        [ slider t 0 50 settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = value })
+                        , slider t 0 50 settings.paddingRight (\value -> SetSettings { settings | paddingRight = value })
+                        ]
+                , settingsBlock "Theme" <|
+                    column [ width fill, Border.color <| black t, Border.width 1 ]
+                        (themes |> List.map (\( name, theme ) -> themeSettingItem name theme))
                 ]
+            ]
         ]
 
 
-slider : Float -> Float -> Int -> (Int -> msg) -> Element msg
-slider min max value msg =
+slider : Theme -> Float -> Float -> Int -> (Int -> msg) -> Element msg
+slider t min max value msg =
     let
         padding =
             logBase 10 max |> ceiling
     in
     row [ width fill, spacing 8 ]
         [ el [ monospace ] <| text <| String.padLeft padding ' ' (String.fromInt value)
-        , el [ width fill, Border.color black, Border.width 1 ] <|
+        , el [ width fill, Border.color <| black t, Border.width 1 ] <|
             Input.slider [ width fill ]
                 { onChange = round >> msg
                 , label = Input.labelHidden ""
                 , min = min
                 , max = max
                 , value = toFloat value
-                , thumb = Input.thumb [ width (px 20), height (px 20), Background.color black ]
+                , thumb = Input.thumb [ width (px 20), height (px 20), Background.color <| black t ]
                 , step = Just 1
                 }
         ]
 
 
-viewSettingsItem labelText msg active =
+viewSettingsItem t labelText msg active =
     Input.button
         ([ width fill ]
-            ++ itemAttributes
+            ++ itemAttributes t
             ++ (if active then
-                    [ Background.color secondary, Font.color wheat ]
+                    [ Background.color <| secondary t, Font.color <| wheat t ]
 
                 else
                     []
@@ -793,8 +819,8 @@ printSeconds seconds =
 -- Typing
 
 
-viewTyping : Typing -> Settings -> Element FrontendMsg
-viewTyping { dictation, layer, madeError, paused, showKeyboard } settings =
+viewTyping : Theme -> Typing -> Settings -> Element FrontendMsg
+viewTyping t { dictation, layer, madeError, paused, showKeyboard } settings =
     let
         color =
             if madeError then
@@ -818,8 +844,8 @@ viewTyping { dictation, layer, madeError, paused, showKeyboard } settings =
         typewriter =
             row [ monospace, Font.size 32 ]
                 [ row [] (List.map viewChar prev)
-                , el [ Background.color color, Font.color wheat ] <| viewChar dictation.current
-                , row [ Font.color secondary ] (List.map viewChar next)
+                , el [ Background.color <| color t, Font.color <| wheat t ] <| viewChar dictation.current
+                , row [ Font.color <| secondary t ] (List.map viewChar next)
                 ]
 
         pausedEl =
@@ -827,11 +853,23 @@ viewTyping { dictation, layer, madeError, paused, showKeyboard } settings =
                 text <|
                     String.pad (settings.paddingLeft + settings.paddingRight + 1) ' ' <|
                         "Paused. Press Any Key"
+
+        pauseButton =
+            roundedButton t Pause (materialIcon Icons.pause) 'p'
+
+        keyboardButton =
+            roundedButton t ToggleKeyboard (materialIcon Icons.keyboard) 'k'
+
+        hideKeyboardButton =
+            roundedButton t ToggleKeyboard (materialIcon Icons.keyboard_hide) 'k'
+
+        playButton =
+            roundedButton t Play (materialIcon Icons.play_arrow) 'p'
     in
     column
         [ spacing 64
         , topLeftBar
-            [ backButton
+            [ backButton t
             , if paused then
                 playButton
 
@@ -892,8 +930,8 @@ layerUrl layout layer =
 -- Statistic
 
 
-viewStatistic : Hover -> List PastDictation -> Element FrontendMsg
-viewStatistic hovering statistic =
+viewStatistic : Theme -> Hover -> List PastDictation -> Element FrontendMsg
+viewStatistic t hovering statistic =
     let
         viewPast : PastDictation -> Element FrontendMsg
         viewPast past =
@@ -901,9 +939,9 @@ viewStatistic hovering statistic =
                 ([ width fill
                  , Element.Events.onMouseEnter <| OnHover [ past ]
                  ]
-                    ++ itemAttributes
+                    ++ itemAttributes t
                     ++ (if List.member past hovering then
-                            [ Background.color primary ]
+                            [ Background.color <| primary t ]
 
                         else
                             []
@@ -925,7 +963,7 @@ viewStatistic hovering statistic =
                     -- placeholder because of hover jitter
                     column [ spacing 8 ] [ text " ", text " " ]
     in
-    column [ topLeftBar [ backButton ], spacing 48, width fill ]
+    column [ topLeftBar [ backButton t ], spacing 48, width fill ]
         [ title "Statistic"
         , row [ width fill, spacing 48 ]
             [ column [ spacing 8, width fill, alignTop ]
@@ -940,13 +978,13 @@ viewStatistic hovering statistic =
                             , height (fill |> maximum 512)
                             , scrollbarY
                             , Border.width 1
-                            , Border.color black
+                            , Border.color <| black t
                             , Element.Events.onMouseLeave <| OnHover <| []
                             ]
                         <|
                             List.map viewPast statistic
                 ]
-            , column [ spacing 8, alignTop ] [ subTitle "Point Progression", viewPointsGraph hovering statistic, viewHover ]
+            , column [ spacing 8, alignTop ] [ subTitle "Point Progression", viewPointsGraph t hovering statistic, viewHover ]
             ]
         ]
 
@@ -998,8 +1036,8 @@ errorPercent { content } errors =
     String.fromInt percent ++ "%"
 
 
-viewTypingStatistic : PastDictation -> Element FrontendMsg
-viewTypingStatistic past =
+viewTypingStatistic : Theme -> PastDictation -> Element FrontendMsg
+viewTypingStatistic t past =
     let
         { lesson, errors, duration } =
             past
@@ -1010,11 +1048,14 @@ viewTypingStatistic past =
                 |> Dict.toList
                 |> List.sortBy (Tuple.second >> List.length)
                 |> List.reverse
+
+        homeButton =
+            roundedButton t ToMenu (materialIcon Icons.home) 'h'
     in
     column
         [ spacing 48
-        , topLeftBar [ homeButton, statisticButton ]
-        , bottomCenterBar [ roundedButton (OpenBook lesson) (materialIcon Icons.refresh) 'r' ]
+        , topLeftBar [ homeButton, statisticButton t ]
+        , bottomCenterBar [ roundedButton t (OpenBook lesson) (materialIcon Icons.refresh) 'r' ]
         ]
         [ title "Your Typing Statistic"
         , column [ spacing 8 ]
@@ -1034,7 +1075,7 @@ viewTypingStatistic past =
                 smile "There are no errors"
 
               else
-                wrappedRow [ spacing 16, width (fill |> maximum 650) ] (grouped |> List.map viewError)
+                wrappedRow [ spacing 16, width (fill |> maximum 650) ] (grouped |> List.map (viewError t))
             ]
         , column [ spacing 8 ]
             [ subTitle "Points"
@@ -1082,13 +1123,13 @@ viewChar char =
                 String.fromChar char
 
 
-viewError : ( Char, List TypeError ) -> Element msg
-viewError ( char, typeErrors ) =
-    row [ spacing 8, Border.width 1, Border.color black, padding 4, Border.rounded 999 ]
+viewError : Theme -> ( Char, List TypeError ) -> Element msg
+viewError t ( char, typeErrors ) =
+    row [ spacing 8, Border.width 1, Border.color <| black t, padding 4, Border.rounded 999 ]
         [ el
             [ monospace
-            , Font.color wheat
-            , Background.color primary
+            , Font.color <| wheat t
+            , Background.color <| primary t
             , Border.rounded 999
             , width (px 24)
             , height (px 24)
@@ -1100,8 +1141,8 @@ viewError ( char, typeErrors ) =
         ]
 
 
-viewPointsGraph : Hover -> List PastDictation -> Element FrontendMsg
-viewPointsGraph hovering dictations =
+viewPointsGraph : Theme -> Hover -> List PastDictation -> Element FrontendMsg
+viewPointsGraph t hovering dictations =
     let
         items =
             dictations
@@ -1132,11 +1173,11 @@ viewPointsGraph hovering dictations =
                             [ CA.htmlAttrs [ Html.Attributes.style "cursor" "pointer" ] ]
                        )
                 )
-                [ C.yTicks [ CA.color (toHex black) ]
-                , C.yLabels [ CA.color (toHex black) ]
-                , C.grid [ CA.color (toHex secondary) ]
+                [ C.yTicks [ CA.color (toHex <| black t) ]
+                , C.yLabels [ CA.color (toHex <| black t) ]
+                , C.grid [ CA.color (toHex <| secondary t) ]
                 , C.series (Tuple.first >> toFloat)
-                    [ C.interpolated (Tuple.second >> medianPoints >> toFloat) [ CA.color <| toHex primary, CA.width 4 ] [ CA.circle, CA.size 8 ]
+                    [ C.interpolated (Tuple.second >> medianPoints >> toFloat) [ CA.color <| toHex <| primary t, CA.width 4 ] [ CA.circle, CA.size 8 ]
                         |> C.variation
                             (\_ data ->
                                 let
@@ -1144,7 +1185,7 @@ viewPointsGraph hovering dictations =
                                         a |> List.map .finished |> List.map Time.posixToMillis |> Set.fromList
                                 in
                                 if haveCommon (hovering |> createSet) (data |> Tuple.second |> createSet) then
-                                    [ CA.circle, CA.size 48, CA.color (toHex primary) ]
+                                    [ CA.circle, CA.size 48, CA.color (toHex <| primary t) ]
 
                                 else
                                     []
@@ -1210,61 +1251,33 @@ toHex color =
         |> String.cons '#'
 
 
-backButton =
-    roundedButton ToMenu (materialIcon Icons.arrow_back) 'b'
+backButton t =
+    roundedButton t ToMenu (materialIcon Icons.arrow_back) 'b'
 
 
-logoutButton =
-    roundedButton Logout (materialIcon Icons.logout) 'l'
+statisticButton t =
+    roundedButton t ToStatistic (materialIcon Icons.query_stats) 't'
 
 
-pauseButton =
-    roundedButton Pause (materialIcon Icons.pause) 'p'
-
-
-keyboardButton =
-    roundedButton ToggleKeyboard (materialIcon Icons.keyboard) 'k'
-
-
-hideKeyboardButton =
-    roundedButton ToggleKeyboard (materialIcon Icons.keyboard_hide) 'k'
-
-
-playButton =
-    roundedButton Play (materialIcon Icons.play_arrow) 'p'
-
-
-settingsButton =
-    roundedButton ToSettings (materialIcon Icons.settings) 's'
-
-
-statisticButton =
-    roundedButton ToStatistic (materialIcon Icons.query_stats) 't'
-
-
-homeButton =
-    roundedButton ToMenu (materialIcon Icons.home) 'h'
-
-
-roundedButton onPress label shortcut =
+roundedButton t onPress label shortcut =
     Input.button
-        ([ Border.rounded 999 ] ++ buttonAttributes ++ accessKey shortcut)
+        ([ Border.rounded 999 ] ++ buttonAttributes t ++ accessKey shortcut)
         { label = label, onPress = Just onPress }
 
 
-squareButton onPress label shortcut =
+squareButton t onPress label shortcut =
     Input.button
-        (buttonAttributes ++ accessKey shortcut)
+        (buttonAttributes t ++ accessKey shortcut)
         { label = label, onPress = Just onPress }
 
 
-buttonAttributes =
-    [ Border.color black, Border.width 1, Background.color wheat ] ++ itemAttributes
+buttonAttributes t =
+    [ Border.color <| black t, Border.width 1, Background.color <| wheat t ] ++ itemAttributes t
 
 
-itemAttributes =
+itemAttributes t =
     [ padding 8
-    , mouseOver [ Background.color primary, Font.color wheat ]
+    , mouseOver [ Background.color <| primary t, Font.color <| wheat t ]
     , htmlAttribute <| Html.Attributes.style "z-index" "10000"
     ]
 
@@ -1304,20 +1317,54 @@ monospace =
     Font.family [ Font.typeface "PT Mono", Font.monospace ]
 
 
-black =
-    rgb255 51 51 41
-
-
+primary : Theme -> Color
 primary =
-    rgb255 243 145 146
+    resolveColor Primary
 
 
 secondary =
-    rgb255 175 134 132
+    resolveColor Secondary
 
 
+wheat : Theme -> Color
 wheat =
-    rgb255 255 249 231
+    resolveColor White
+
+
+black =
+    resolveColor Black
+
+
+resolveColor : NamedColor -> Theme -> Color
+resolveColor color theme =
+    case theme of
+        WheatField ->
+            case color of
+                Primary ->
+                    rgb255 243 145 146
+
+                Secondary ->
+                    rgb255 175 134 132
+
+                White ->
+                    rgb255 255 249 231
+
+                Black ->
+                    rgb255 51 51 41
+
+        ElectricFields ->
+            case color of
+                Primary ->
+                    rgb255 180 210 115
+
+                Secondary ->
+                    rgb255 176 82 121
+
+                White ->
+                    rgb255 46 46 46
+
+                Black ->
+                    rgb255 214 214 214
 
 
 
