@@ -149,6 +149,7 @@ update msg model =
                         , lesson = book
                         , duration = 0
                         , paused = True
+                        , showKeyboard = True
                         }
               }
             , Cmd.none
@@ -298,6 +299,14 @@ update msg model =
             ( { model | page = TypingStatisticPage past, statistic = past :: model.statistic }
             , Lamdera.sendToBackend <| ConsStatistic past
             )
+
+        ToggleKeyboard ->
+            case model.page of
+                TypingPage typing ->
+                    ( { model | page = TypingPage { typing | showKeyboard = not typing.showKeyboard } }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
 
 updateDictation : KeyboardKey -> Settings -> Typing -> Maybe Typing
@@ -498,9 +507,34 @@ view model =
         [ ptMonoLink
         , styleTag
         , iconTag
-        , layout [ width fill, height fill, Background.color wheat, Font.color black ]
+        , layoutWith
+            { options =
+                [ focusStyle
+                    { backgroundColor = Nothing
+                    , borderColor = Nothing
+                    , shadow = Just { color = primary, offset = ( 0, 0 ), blur = 0, size = 4 }
+                    }
+                ]
+            }
+            [ width fill, height fill, Background.color wheat, Font.color black ]
             (el
-                [ centerX, centerY, Border.color black, Border.width 1, padding appPadding, Border.rounded 16 ]
+                [ centerX
+                , centerY
+                , Border.color black
+                , Border.width 1
+                , padding appPadding
+                , Border.rounded 16
+                , inFront <|
+                    el
+                        [ alignBottom
+                        , alignRight
+                        , moveDown 32
+                        , alpha 0.2
+                        , tooltip "your progress or account could get lost in an update"
+                        ]
+                    <|
+                        text "preview"
+                ]
              <|
                 body
             )
@@ -515,7 +549,7 @@ viewLogin { username, password, visibility, failed } =
             [ width fill, Background.color wheat, Border.width 1, Border.color black, Border.rounded 0 ]
 
         eyeButton =
-            Input.button [ height fill, padding 11, tooltip "Show password" ]
+            Input.button [ height fill, padding 10, tooltip "Show password" ]
                 { label =
                     materialIcon
                         (if visibility then
@@ -595,7 +629,7 @@ styleTag =
 *::-webkit-scrollbar-thumb {
   background-color: black;
 }
- """
+"""
         ]
 
 
@@ -617,24 +651,21 @@ viewMenu model menu =
 
         sidebar =
             case menu.current of
-                Just book ->
+                Just lesson ->
                     column [ height fill, spacing 32 ]
-                        [ block "Char count" <| text <| String.fromInt <| String.length book.content
-                        , block "Word count" <| text <| String.fromInt <| List.length <| String.split " " <| book.content
-                        , block "Preview" <| paragraph [ width (px 400), height fill ] [ text (book.content |> truncate 140) ]
-                        , Input.button
-                            [ alignRight
-                            , alignBottom
-                            , Border.color black
-                            , Border.width 1
-                            , padding 8
-                            , mouseOver [ Background.color primary ]
-                            ]
-                            { onPress = Just (OpenBook book), label = text "Start" }
+                        [ block "Char count" <| text <| String.fromInt <| String.length lesson.content
+                        , block "Word count" <| text <| String.fromInt <| List.length <| String.split " " <| lesson.content
+                        , block "Preview" <| paragraph [ width (px 400), height fill ] [ text (lesson.content |> truncate 140) ]
+                        , el [ alignRight, alignBottom ] <| squareButton (OpenBook lesson) (text "Start") 'r'
                         ]
 
                 Nothing ->
                     none
+
+        lessonDoneCount lesson =
+            model.statistic
+                |> List.filter (\p -> p.lesson == lesson)
+                |> List.length
     in
     column [ spacing 32, topRightBar [ statisticButton, settingsButton ] ]
         [ title "Dictations"
@@ -642,21 +673,35 @@ viewMenu model menu =
             [ spacing 40 ]
             [ column
                 [ Border.color black, Border.width 1, height (fill |> maximum 512), scrollbarY, width fill ]
-                (model.items |> List.map viewMenuItem)
+                (model.items |> List.map (\l -> viewMenuItem (lessonDoneCount l) l))
             , sidebar
             ]
         ]
 
 
-viewMenuItem : Lesson -> Element FrontendMsg
-viewMenuItem book =
+viewMenuItem : Int -> Lesson -> Element FrontendMsg
+viewMenuItem doneCount book =
     let
         charsPerSecond =
             5
+
+        check =
+            if doneCount > 1 then
+                materialIcon Icons.done_all
+
+            else if doneCount > 0 then
+                materialIcon Icons.done
+
+            else
+                none
     in
     Input.button
         ([ width fill ] ++ itemAttributes)
-        { label = text (book.title ++ " (" ++ printSeconds ((book.content |> String.length |> toFloat) / charsPerSecond) ++ ")")
+        { label =
+            row [ spacing 8 ]
+                [ text (book.title ++ " (" ++ printSeconds ((book.content |> String.length |> toFloat) / charsPerSecond) ++ ")")
+                , el [ tooltip <| "done this " ++ String.fromInt doneCount ++ "x" ] <| check
+                ]
         , onPress = Just <| PreviewBook book
         }
 
@@ -749,7 +794,7 @@ printSeconds seconds =
 
 
 viewTyping : Typing -> Settings -> Element FrontendMsg
-viewTyping { dictation, layer, madeError, paused } settings =
+viewTyping { dictation, layer, madeError, paused, showKeyboard } settings =
     let
         color =
             if madeError then
@@ -792,6 +837,11 @@ viewTyping { dictation, layer, madeError, paused } settings =
 
               else
                 pauseButton
+            , if showKeyboard then
+                hideKeyboardButton
+
+              else
+                keyboardButton
             ]
         ]
         [ if paused then
@@ -799,7 +849,11 @@ viewTyping { dictation, layer, madeError, paused } settings =
 
           else
             typewriter
-        , image [ width fill ] { src = layerUrl settings.layout layer, description = "" }
+        , if showKeyboard then
+            image [ width fill ] { src = layerUrl settings.layout layer, description = "" }
+
+          else
+            none
         ]
 
 
@@ -932,6 +986,10 @@ info labelText =
     row [ spacing 8 ] [ materialIcon Icons.info, text labelText ]
 
 
+smile labelText =
+    row [ spacing 8 ] [ materialIcon Icons.sentiment_very_satisfied, text labelText ]
+
+
 errorPercent { content } errors =
     let
         percent =
@@ -956,7 +1014,7 @@ viewTypingStatistic past =
     column
         [ spacing 48
         , topLeftBar [ homeButton, statisticButton ]
-        , bottomCenterBar [ button (Just <| OpenBook lesson) (materialIcon Icons.refresh) 'r' ]
+        , bottomCenterBar [ roundedButton (OpenBook lesson) (materialIcon Icons.refresh) 'r' ]
         ]
         [ title "Your Typing Statistic"
         , column [ spacing 8 ]
@@ -973,7 +1031,7 @@ viewTypingStatistic past =
         , column [ spacing 8 ]
             [ subTitle "Errors"
             , if List.isEmpty grouped then
-                info "There are no errors"
+                smile "There are no errors"
 
               else
                 wrappedRow [ spacing 16, width (fill |> maximum 650) ] (grouped |> List.map viewError)
@@ -1060,7 +1118,11 @@ viewPointsGraph hovering dictations =
                  , CE.onMouseMove (List.concatMap (CI.getData >> Tuple.second) >> OnHover) (CE.getNearest CI.dots)
                  , CE.onMouseLeave (OnHover [])
                  , CE.onMouseUp
-                    (List.concatMap (CI.getData >> Tuple.second) >> median >> Maybe.map ToTypingStatistic >> Maybe.withDefault NoOpFrontendMsg)
+                    (List.concatMap (CI.getData >> Tuple.second)
+                        >> median
+                        >> Maybe.map ToTypingStatistic
+                        >> Maybe.withDefault NoOpFrontendMsg
+                    )
                     (CE.getNearest CI.dots)
                  ]
                     ++ (if List.isEmpty hovering then
@@ -1138,16 +1200,6 @@ bucketStatistic pastDictations =
     pastDictations |> List.foldl insert Dict.empty
 
 
-
--- C.xAxis [ CA.color (toHex black) ]
--- C.xTicks [ CA.color (toHex black), CA.ints, CA.noGrid ]
---, C.xLabels [ CA.color (toHex black), CA.ints ]
---, C.yAxis [ CA.color (toHex black) ]
---, C.each (List.map CI.Item hovering) <|
---   \p item ->
---      [ C.tooltip item [] [] [] ]
-
-
 toHex color =
     color
         |> toRgb
@@ -1158,67 +1210,62 @@ toHex color =
         |> String.cons '#'
 
 
-
--- Common
-{-
-   lineClamp lines =
-       -- todo make work when needed
-       [ htmlAttribute (Html.Attributes.style "display" "-webkit-box")
-       , htmlAttribute (Html.Attributes.style "-webkit-line-clamp" (String.fromInt lines))
-       , htmlAttribute (Html.Attributes.style "-webkit-box-orient" "vertical")
-       , htmlAttribute (Html.Attributes.style "overflow" "hidden")
-       ]
--}
-
-
 backButton =
-    button (Just ToMenu) (materialIcon Icons.arrow_back) 'b'
+    roundedButton ToMenu (materialIcon Icons.arrow_back) 'b'
 
 
 logoutButton =
-    button (Just Logout) (materialIcon Icons.logout) 'l'
+    roundedButton Logout (materialIcon Icons.logout) 'l'
 
 
 pauseButton =
-    button (Just Pause) (materialIcon Icons.pause) 'p'
+    roundedButton Pause (materialIcon Icons.pause) 'p'
+
+
+keyboardButton =
+    roundedButton ToggleKeyboard (materialIcon Icons.keyboard) 'k'
+
+
+hideKeyboardButton =
+    roundedButton ToggleKeyboard (materialIcon Icons.keyboard_hide) 'k'
 
 
 playButton =
-    button (Just Play) (materialIcon Icons.play_arrow) 'p'
+    roundedButton Play (materialIcon Icons.play_arrow) 'p'
 
 
 settingsButton =
-    button (Just ToSettings) (materialIcon Icons.settings) 's'
+    roundedButton ToSettings (materialIcon Icons.settings) 's'
 
 
 statisticButton =
-    button (Just ToStatistic) (materialIcon Icons.query_stats) 't'
+    roundedButton ToStatistic (materialIcon Icons.query_stats) 't'
 
 
 homeButton =
-    button (Just ToMenu) (materialIcon Icons.home) 'h'
+    roundedButton ToMenu (materialIcon Icons.home) 'h'
 
 
-button onPress label shortcut =
+roundedButton onPress label shortcut =
     Input.button
-        ([ Border.rounded 999 ]
-            ++ buttonAttributes
-            ++ accessKey shortcut
-        )
-        { label = label, onPress = onPress }
+        ([ Border.rounded 999 ] ++ buttonAttributes ++ accessKey shortcut)
+        { label = label, onPress = Just onPress }
+
+
+squareButton onPress label shortcut =
+    Input.button
+        (buttonAttributes ++ accessKey shortcut)
+        { label = label, onPress = Just onPress }
 
 
 buttonAttributes =
-    [ Border.color black
-    , Border.width 1
-    ]
-        ++ itemAttributes
+    [ Border.color black, Border.width 1, Background.color wheat ] ++ itemAttributes
 
 
 itemAttributes =
     [ padding 8
-    , Background.color wheat
     , mouseOver [ Background.color primary, Font.color wheat ]
+    , htmlAttribute <| Html.Attributes.style "z-index" "10000"
     ]
 
 
@@ -1230,11 +1277,6 @@ accessKey key =
 
 tooltip string =
     htmlAttribute <| Html.Attributes.title string
-
-
-
---aspect ration =
---    htmlAttribute (Html.Attributes.style "aspect-ration" <| String.fromFloat ration)
 
 
 title labelText =
@@ -1279,5 +1321,7 @@ wheat =
 
 
 
+--aspect ration =
+--    htmlAttribute (Html.Attributes.style "aspect-ration" <| String.fromFloat ration)
 --zero4 =
 --    { left = 0, top = 0, right = 0, bottom = 0 }

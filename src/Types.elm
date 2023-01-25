@@ -38,6 +38,7 @@ type alias Typing =
     , lesson : Lesson
     , duration : Float
     , paused : Bool
+    , showKeyboard : Bool
     }
 
 
@@ -130,6 +131,7 @@ type FrontendMsg
     | TryRegister String String
     | Logout
     | FinishedDictation (List TypeError) Lesson Float Posix
+    | ToggleKeyboard
 
 
 type alias Hover =
