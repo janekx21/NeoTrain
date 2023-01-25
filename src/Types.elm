@@ -14,10 +14,10 @@ import Url exposing (Url)
 
 type alias FrontendModel =
     { key : Key
-    , items : List Lesson
     , page : Page
     , settings : Settings
     , statistic : List PastDictation
+    , authorised : Bool
     }
 
 
@@ -114,7 +114,7 @@ type FrontendMsg
     | NoOpFrontendMsg
     | PreviewBook Lesson
     | OpenBook Lesson
-    | ToMenu
+    | Back
     | KeyDown KeyboardKey
     | KeyUp KeyboardKey
     | ToSettings
@@ -133,6 +133,7 @@ type FrontendMsg
     | Logout
     | FinishedDictation (List TypeError) Lesson Float Posix
     | ToggleKeyboard
+    | ChangePage Page
 
 
 type alias Hover =
@@ -174,15 +175,21 @@ type Page
     | TypingStatisticPage PastDictation
     | SettingsPage
     | StatisticPage Hover
-    | LoginAndRegisterPage LoginAndRegister
+    | AuthPage Auth
+    | InfoPage
 
 
-type alias LoginAndRegister =
+type alias Auth =
     { username : String
     , password : String
-    , visibility : Bool
+    , passwordVisibility : Bool
     , failed : LoginFail
     }
+
+
+defaultAuth : Auth
+defaultAuth =
+    { username = "", failed = NotAsked, password = "", passwordVisibility = False }
 
 
 type LoginFail
@@ -226,6 +233,7 @@ defaultSettings =
 type Theme
     = WheatField
     | ElectricFields
+    | CandyLand
 
 
 type NamedColor

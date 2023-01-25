@@ -17,6 +17,7 @@ import Element.Input as Input
 import Hex
 import Html
 import Html.Attributes
+import Icon
 import Lamdera
 import Lamdera.Json as Decode exposing (Decoder)
 import Material.Icons as Icons
@@ -50,69 +51,79 @@ app =
 
 init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
 init _ key =
-    let
-        items =
-            [ Lesson "Foo" "foobar"
-            , Lesson "Ein Satz" "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
-            , Lesson "Diktat | Zucker im Urin" textOne
-            , Lesson "Elm" elmText
-            , Lesson "Special Chars" ":: -- \\\\ // !?!?!? ?! !? ^ ?! ^ ?!!??! ++ -- ++ -- +- -+ ; () () {} [] [] () {} \\\\ // ___ ||| $$ ## <> <> == && <= >= '' '' \"\" \"\" ~~ %% ``` ``` *** (+~}/$|…\\#/$|[%)+?$=)^|](>=\\/{[(`]?-(\\{/(->=_><!^/`~&…_[<_=&[>]^<;'\"#\"$%+|~`+?)(/{*"
-            , Lesson "Return" "hallo\nwelt"
-            ]
-                ++ dictates
-                ++ List.repeat 40 { title = "todo", content = String.repeat 200 "this is just a placeholder" }
-    in
     ( { key = key
-      , items = items
-      , page = LoginAndRegisterPage emptyLoginPage
+      , page = AuthPage defaultAuth
       , settings = defaultSettings
       , statistic = []
+      , authorised = False
       }
     , Cmd.batch [ Lamdera.sendToBackend GetSession ]
     )
 
 
-textOne =
-    "Ein Professor betonte in seinen Vorlesungen immer wieder, dass man sich als baldiger Arzt vor nichts ekeln darf. Außerdem müsse man beweisen, dass man eine herausragende Beobachtungsgabe hat. Er erklärte, dass man früher nicht die Möglichkeiten besaß, die man heute hat. So musste man beispielsweise mit der Zunge testen, wie viel Zucker im Urin ist. Die Studenten bekamen ein ungutes Gefühl, als der Professor schließlich ein Glas mit einer gelben Flüssigkeit hervorholte. Die Studenten sollten den Urin so testen wie früher. Der Professor machte es vor, tauchte den Zeigefinger in das Glas und leckte anschließend den Finger ab. Die Studenten waren schockiert. Dann hatten sie sich wieder gefasst und jeder machte es dem Professor nach. Manchmal verzog ein Student das Gesicht kurz zu einer Grimasse, aber alle leckten ihre Finger mit dem Urin ab. Dann sagte der Professor: „Ausgezeichnet. Sie alle haben ihren Ekel überwunden. Allerdings gibt es noch große Probleme bei der Beobachtung. Denn niemand hat anscheinend gesehen, dass ich zwar den Zeigefinger in das Glas gesteckt, aber den Mittelfinger abgeleckt habe."
-
-
-dictates : List Lesson
-dictates =
+lessons : List Lesson
+lessons =
+    let
+        elmText =
+            String.repeat 5 "|> "
+                ++ String.repeat 5 "<| "
+                ++ String.repeat 5 "++ \"\" "
+                ++ String.repeat 2 "a -> b -> c "
+                ++ String.repeat 2 "el [] <| text \"foo\" "
+                ++ String.repeat 2 "foo | bar | foobar | barfoo "
+                ++ String.repeat 2 "( { foo | bar = bar } ) "
+    in
     [ Lesson "asdfjklö" "fjfj jfjf ff jj dd kk kddk dkdk ss ll llss slsl aa öö öaöa ööaa\ndas las jaja laff ja all fass lass fad da falls dass ff lala lfd alaaf als öd fall ad"
     , Lesson "erui" "ee ii rr uu eiru ruii erru reiu rurr iuer reir erri reii irre iuer\nalufrei ruderaler reife alufreier lesefauleres kille arider irrer residuelle leises sauerer alaaf sie allerlei deliriöse reellere ruf ausfiele frisiere dies"
     , Lesson "qwop" "qq pp ww oo qwop powp qwow powo pqqw owpq pqow powp woqp wwpo pqpp\nuferlose pseudofossil spediere erkiese wassre ersöffe au paarweiser diesfalls sakrale rural auffasere dieserlei kauere rasa persifliere krassere pofe kordialer spurloser"
-    , Lesson "ghtz" "\ntarifierst reliefartiges weiterdelegiert ausgekehlte rezipiert weiterfahrt kalfaterte rostigster auszahltet fastetest fortgejagtes weglegtest taktlosester fortzieht alleeartiger herausoperiertest getrotzter wohldosierte lautstark topaktuelles"
-    , Lesson "vncm" "\nunversehrtestes kastrierenden weltvergessenen zugespachtelt spielstark einheizen umzuquartierenden werksinterne zweiziffriges jugendfreier weiterrutschte durchpausten zupfenden vertrottelt chiffreartiges durchgefallen entdecktes wasserlöslicheres anfindende antioligarchischen"
-    , Lesson "yb" "\nwissenschaftsfreundlichster krampfig orgastische herumlenkender sechsundsechzigstes hochzurechnende schallschluckendsteserlaubnisfreiem problemlösendem nachkorrigiertest hinschmissen kriegsbeteiligter auszuschelten vorberechneter herniederschwebende vorgemachten aufbauschenden durchkramendes geköpften anmusterten"
-    , Lesson "x,." "\n"
+    , Lesson "ghtz" "ghtz tzgh ghtz ghgh tztz zztt hhgg gghh ttzz ghtz hgzt hgtz ghzt\ntarifierst reliefartiges weiterdelegiert ausgekehlte rezipiert weiterfahrt kalfaterte rostigster auszahltet fastetest fortgejagtes weglegtest taktlosester fortzieht alleeartiger herausoperiertest getrotzter wohldosierte lautstark topaktuelles"
+    , Lesson "vncm" "vncm mcnv vncm cvnm mnvc cvnm mmcc nnvv cmvn mvnc cmcn ccmm vncm\nunversehrtestes kastrierenden weltvergessenen zugespachtelt spielstark einheizen umzuquartierenden werksinterne zweiziffriges jugendfreier weiterrutschte durchpausten zupfenden vertrottelt chiffreartiges durchgefallen entdecktes wasserlöslicheres anfindende antioligarchischen"
+    , Lesson "yb" "yy bb yy bb by yb yyyb bbby bbyy yybb bbbb yyyb\nalkylsubstituierten altbayerische hypnophob nylonbestrumpftem hyperbolischem hybridogenes hypnophober currygelben branchentypischen embryologischem synchronisierbaren methylenblauer altlibyschem subsynaptischen royalblaue kybernetisch nichtbayerischen systembedingtem polyalphabetisch boykottbedingter"
+    , Lesson "x,." "xx .. xx .. x.x .x. xx.. x..x xxx. .... x...\nschulexternen asexuelles kontextspezifischem. textiler praxisfeldbezogenen oxidfrei. extrapolierende durchexerziertest kontextbasiertem textlastige exhumierter. textnahes retroflex wetterexponierter extrascharfe. explodierender linksextremster fehlerfixiert. annexionistischer zytotoxisch"
+    , Lesson "Ein Satz" "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
+    , Lesson "Spezial Zeichen" ":: -- \\\\ // !?!?!? ?! !? ^ ?! ^ ?!!??! ++ -- ++ -- +- -+ ; () () {} [] [] () {} \\\\ // ___ ||| $$ ## <> <> == && <= >= '' '' \"\" \"\" ~~ %% ``` ``` *** (+~}/$|\\#/$|[%)+?$=) ^|](>=\\/{[(`]?-(\\{/(-> =_><!^/`~&_[<_=&[>] ^<;'\"#\"$%+|~`+?)(/{*"
+    , Lesson "Elm" elmText
+    , Lesson "Junge und Berg von Chat GPT" "Es war einmal ein kleiner Junge, der in einem Dorf am Fuße eines großen Berges wohnte. Eines Tages beschloss er, den Berg zu besteigen, um zu sehen, was oben war. Er packte seinen Rucksack mit Proviant und Wasser und begann seine Reise. Der Aufstieg war beschwerlich, aber er gab nicht auf. Nach vielen Stunden erreichte er die Spitze des Berges und was er sah, übertraf seine kühnsten Träume. Er sah unendliche Wälder, kristallklare Flüsse und Täler voller wilder Blumen. Er beschloss, dass er immer wieder hierher zurückkehren würde, um die Schönheit dieses Ortes zu genießen."
+    , Lesson "Klimawandel Debatte von Chat GPT" "Die Debatte um den Klimawandel hat in den letzten Jahren stark zugenommen. Experten sind sich einig, dass der Ausstoß von Treibhausgasen und die Abholzung von Wäldern die Erderwärmung beschleunigen. Regierungen auf der ganzen Welt haben sich verpflichtet, Maßnahmen zu ergreifen, um diesem Problem entgegenzuwirken. Ein wichtiger Schritt ist die Förderung erneuerbarer Energien und die Verringerung des CO2-Ausstoßes. Auch die Wiederaufforstung von Wäldern und die Schaffung von Schutzgebieten können dazu beitragen, den Klimawandel zu bekämpfen."
+    , Lesson "DebugText" "foobar"
     ]
 
 
-elmText =
-    String.repeat 10 "|> aö "
-        ++ String.repeat 10 "<| aö "
-        ++ String.repeat 10 "++ aj "
-        ++ String.repeat 3 "a -> b -> c "
-        ++ String.repeat 3 "el [] <| text \"foo\" "
-        ++ String.repeat 3 "foo | bar | foobar | barfoo "
-        ++ String.repeat 3 "( { foo | bar = bar } ) "
+layoutNames layout =
+    case layout of
+        Neo ->
+            "Neo"
+
+        Bone ->
+            "Bone"
+
+        NeoQwertz ->
+            "NeoQwertz"
+
+        AdNW ->
+            "AdNW"
+
+        KOY ->
+            "KOY"
+
+        NeoQwerty ->
+            "NeoQwerty"
+
+        Vou ->
+            "Vou"
+
+        Mine ->
+            "Mine"
 
 
 layouts =
-    [ ( "Neo", Neo )
-    , ( "Bone", Bone )
-    , ( "NeoQwertz", NeoQwertz )
-    , ( "AdNW", AdNW )
-    , ( "KOY", KOY )
-    , ( "NeoQwerty", NeoQwerty )
-    , ( "Vou", Vou )
-    , ( "Mine", Mine )
-    ]
+    [ Neo, Bone, NeoQwertz, AdNW, KOY, NeoQwerty, Vou, Mine ]
 
 
 themes =
     [ ( "WheatField", WheatField )
     , ( "ElectricFields", ElectricFields )
+    , ( "CandyLand", CandyLand )
     ]
 
 
@@ -161,8 +172,36 @@ update msg model =
             , Cmd.none
             )
 
-        ToMenu ->
-            ( { model | page = MenuPage { current = Nothing } }, Cmd.none )
+        Back ->
+            let
+                page =
+                    case model.page of
+                        MenuPage menu ->
+                            MenuPage menu
+
+                        TypingPage _ ->
+                            MenuPage { current = Nothing }
+
+                        TypingStatisticPage _ ->
+                            StatisticPage []
+
+                        SettingsPage ->
+                            MenuPage { current = Nothing }
+
+                        StatisticPage _ ->
+                            MenuPage { current = Nothing }
+
+                        AuthPage loginAndRegister ->
+                            AuthPage loginAndRegister
+
+                        InfoPage ->
+                            if model.authorised then
+                                MenuPage { current = Nothing }
+
+                            else
+                                AuthPage defaultAuth
+            in
+            ( { model | page = page }, Cmd.none )
 
         ToSettings ->
             ( { model | page = SettingsPage }, Cmd.none )
@@ -265,24 +304,24 @@ update msg model =
 
         SetUsername string ->
             case model.page of
-                LoginAndRegisterPage page ->
-                    ( { model | page = LoginAndRegisterPage { page | username = string } }, Cmd.none )
+                AuthPage page ->
+                    ( { model | page = AuthPage { page | username = string } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
         SetPassword string ->
             case model.page of
-                LoginAndRegisterPage page ->
-                    ( { model | page = LoginAndRegisterPage { page | password = string } }, Cmd.none )
+                AuthPage page ->
+                    ( { model | page = AuthPage { page | password = string } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
         SetVisibility bool ->
             case model.page of
-                LoginAndRegisterPage page ->
-                    ( { model | page = LoginAndRegisterPage { page | visibility = bool } }, Cmd.none )
+                AuthPage page ->
+                    ( { model | page = AuthPage { page | passwordVisibility = bool } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -313,6 +352,9 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
+
+        ChangePage page ->
+            ( { model | page = page }, Cmd.none )
 
 
 updateDictation : KeyboardKey -> Settings -> Typing -> Maybe Typing
@@ -398,34 +440,30 @@ updateFromBackend msg model =
         GotSettings settings ->
             ( { model | settings = settings }, Cmd.none )
 
+        UpdateStatistic pastDictations ->
+            ( { model | statistic = pastDictations }, Cmd.none )
+
         KickOut ->
-            ( { model | page = LoginAndRegisterPage emptyLoginPage }, Cmd.none )
+            ( { model | page = AuthPage defaultAuth, authorised = False }, Cmd.none )
 
         LoginSuccessful ->
-            ( { model | page = MenuPage <| Menu Nothing }, Cmd.batch [ Lamdera.sendToBackend GetSettings, Lamdera.sendToBackend GetStatistic ] )
+            ( { model | page = MenuPage <| Menu Nothing, authorised = True }, Cmd.batch [ Lamdera.sendToBackend GetSettings, Lamdera.sendToBackend GetStatistic ] )
 
         LoginFailed ->
             case model.page of
-                LoginAndRegisterPage page ->
-                    ( { model | page = LoginAndRegisterPage { page | failed = WrongUsernameOrPassword } }, Cmd.none )
+                AuthPage page ->
+                    ( { model | page = AuthPage { page | failed = WrongUsernameOrPassword } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
         RegisterFailed ->
             case model.page of
-                LoginAndRegisterPage page ->
-                    ( { model | page = LoginAndRegisterPage { page | failed = UsernameOrPasswordInvalid } }, Cmd.none )
+                AuthPage page ->
+                    ( { model | page = AuthPage { page | failed = UsernameOrPasswordInvalid } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
-
-        UpdateStatistic pastDictations ->
-            ( { model | statistic = pastDictations }, Cmd.none )
-
-
-emptyLoginPage =
-    { username = "", password = "", visibility = False, failed = NotAsked }
 
 
 ticksPerSecond =
@@ -488,8 +526,11 @@ view model =
                 StatisticPage hover ->
                     viewStatistic t hover model.statistic
 
-                LoginAndRegisterPage page ->
-                    viewLogin t page
+                AuthPage page ->
+                    viewAuth t page
+
+                InfoPage ->
+                    viewInfo t
 
         pageTitle =
             case model.page of
@@ -508,8 +549,11 @@ view model =
                 StatisticPage _ ->
                     "Statistic"
 
-                LoginAndRegisterPage _ ->
+                AuthPage _ ->
                     "Login"
+
+                InfoPage ->
+                    "Info"
     in
     { title = pageTitle ++ " - " ++ "Neo Train"
     , body =
@@ -551,8 +595,20 @@ view model =
     }
 
 
-viewLogin : Theme -> LoginAndRegister -> Element FrontendMsg
-viewLogin t { username, password, visibility, failed } =
+viewInfo : Theme -> Element FrontendMsg
+viewInfo t =
+    column [ topLeftBar [ backButton t ], spacing 16, width (px 512) ]
+        [ subTitle "Über Neo"
+        , paragraph [] [ text "Neo ist eine ergonomische Tastaturbelegung, welche für die deutsche Sprache optimiert ist. Wenn du noch mehr über Neo erfahren möchstes besuch bitte die Homepage." ]
+        , el [ padding 16, centerX ] <| link (buttonAttributes t) { url = "https://www.neo-layout.org/", label = text "Neo Homepage" }
+        , subTitle "Über Mich"
+        , paragraph [] [ text "Hallo ich bin Janek aus Magdeburg. Ich studiere Informatik an der OvGU und programmiere super gerne in Elm. Habe diese Web-App aus Spaß gebaut." ]
+        , el [ padding 16, centerX ] <| link (buttonAttributes t) { url = "https://github.com/janekx21", label = text "Mein Github" }
+        ]
+
+
+viewAuth : Theme -> Auth -> Element FrontendMsg
+viewAuth t { username, password, passwordVisibility, failed } =
     let
         inputStyle =
             [ width fill, Background.color <| wheat t, Border.width 1, Border.color <| black t, Border.rounded 0 ]
@@ -561,16 +617,19 @@ viewLogin t { username, password, visibility, failed } =
             Input.button [ height fill, padding 10, tooltip "Show password" ]
                 { label =
                     materialIcon
-                        (if visibility then
+                        (if passwordVisibility then
                             Icons.visibility_off
 
                          else
                             Icons.visibility
                         )
-                , onPress = Just <| SetVisibility <| not visibility
+                , onPress = Just <| SetVisibility <| not passwordVisibility
                 }
+
+        heading =
+            inFront <| row [ centerX, Font.size 72, moveUp 156, Font.underline ] [ text "Neo Train ", el [ moveUp 14, moveLeft 1 ] <| html <| Icon.icon <| toHex <| black t ]
     in
-    column [ spacing 32 ]
+    column [ spacing 32, heading, topRightBar [ infoButton t ] ]
         [ title "Login / Register"
         , case failed of
             NotAsked ->
@@ -597,7 +656,7 @@ viewLogin t { username, password, visibility, failed } =
                 , label = Input.labelHidden "password"
                 , placeholder = Nothing
                 , onChange = SetPassword
-                , show = visibility
+                , show = passwordVisibility
                 }
             ]
         , row [ spacing 16, width fill ]
@@ -679,13 +738,13 @@ viewMenu t model menu =
         settingsButton =
             roundedButton t ToSettings (materialIcon Icons.settings) 's'
     in
-    column [ spacing 32, topRightBar [ statisticButton t, settingsButton ] ]
+    column [ spacing 32, topRightBar [ infoButton t, statisticButton t, settingsButton ] ]
         [ title "Dictations"
         , row
             [ spacing 40 ]
             [ column
                 [ Border.color <| black t, Border.width 1, height (fill |> maximum 512), scrollbarY, width fill ]
-                (model.items |> List.map (\l -> viewMenuItem t (lessonDoneCount l) l))
+                (lessons |> List.map (\l -> viewMenuItem t (lessonDoneCount l) l))
             , sidebar
             ]
         ]
@@ -734,10 +793,10 @@ viewSettings t settings =
         blockSettingItem label setting =
             viewSettingsItem t label (SetSettings { settings | blockOnError = setting }) (settings.blockOnError == setting)
 
-        layoutSettingItem label setting =
-            viewSettingsItem t label (SetSettings { settings | layout = setting }) (settings.layout == setting)
+        layoutSettingItem layout =
+            viewSettingsItem t (layoutNames layout) (SetSettings { settings | layout = layout }) (settings.layout == layout)
 
-        themeSettingItem label setting =
+        themeSettingItem ( label, setting ) =
             viewSettingsItem t label (SetSettings { settings | theme = setting }) (settings.theme == setting)
 
         logoutButton =
@@ -749,8 +808,8 @@ viewSettings t settings =
             [ column
                 [ spacing 32, alignTop ]
                 [ settingsBlock "Layout Preview" <|
-                    column [ width fill, Border.color <| black t, Border.width 1 ]
-                        (layouts |> List.map (\( name, layout ) -> layoutSettingItem name layout))
+                    column [ width fill, Border.color <| black t, Border.width 1 ] <|
+                        List.map layoutSettingItem layouts
                 , settingsBlock "Blocking"
                     (column [ width fill, Border.color <| black t, Border.width 1 ]
                         [ blockSettingItem "Waiting for one backspace" OneBackspace
@@ -765,8 +824,8 @@ viewSettings t settings =
                         , slider t 0 50 settings.paddingRight (\value -> SetSettings { settings | paddingRight = value })
                         ]
                 , settingsBlock "Theme" <|
-                    column [ width fill, Border.color <| black t, Border.width 1 ]
-                        (themes |> List.map (\( name, theme ) -> themeSettingItem name theme))
+                    column [ width fill, Border.color <| black t, Border.width 1 ] <|
+                        List.map themeSettingItem themes
                 ]
             ]
         ]
@@ -941,7 +1000,7 @@ viewStatistic t hovering statistic =
                  ]
                     ++ itemAttributes t
                     ++ (if List.member past hovering then
-                            [ Background.color <| primary t ]
+                            mouseOverAttributes t
 
                         else
                             []
@@ -1050,7 +1109,7 @@ viewTypingStatistic t past =
                 |> List.reverse
 
         homeButton =
-            roundedButton t ToMenu (materialIcon Icons.home) 'h'
+            roundedButton t Back (materialIcon Icons.home) 'h'
     in
     column
         [ spacing 48
@@ -1110,7 +1169,7 @@ viewChar char =
 
         ' ' ->
             el charSize <|
-                el [ alignBottom, centerX, moveDown 8, alpha 0.5 ] <|
+                el [ alignBottom, centerX, moveDown 4, alpha 0.5 ] <|
                     materialIcon Icons.space_bar
 
         '\n' ->
@@ -1247,12 +1306,17 @@ toHex color =
         |> (\{ red, green, blue } -> [ red, green, blue ])
         |> List.map (\c -> floor <| c * 256)
         |> List.map Hex.toString
+        |> List.map (String.padLeft 2 '0')
         |> String.concat
         |> String.cons '#'
 
 
 backButton t =
-    roundedButton t ToMenu (materialIcon Icons.arrow_back) 'b'
+    roundedButton t Back (materialIcon Icons.arrow_back) 'b'
+
+
+infoButton t =
+    roundedButton t (ChangePage InfoPage) (materialIcon Icons.info) 'i'
 
 
 statisticButton t =
@@ -1277,9 +1341,12 @@ buttonAttributes t =
 
 itemAttributes t =
     [ padding 8
-    , mouseOver [ Background.color <| primary t, Font.color <| wheat t ]
-    , htmlAttribute <| Html.Attributes.style "z-index" "10000"
+    , mouseOver (mouseOverAttributes t)
     ]
+
+
+mouseOverAttributes t =
+    [ Background.color <| primary t, Font.color <| wheat t ]
 
 
 accessKey key =
@@ -1365,6 +1432,20 @@ resolveColor color theme =
 
                 Black ->
                     rgb255 214 214 214
+
+        CandyLand ->
+            case color of
+                Primary ->
+                    rgb255 174 255 74
+
+                Secondary ->
+                    rgb255 247 162 172
+
+                White ->
+                    rgb255 255 255 255
+
+                Black ->
+                    rgb255 91 27 6
 
 
 
