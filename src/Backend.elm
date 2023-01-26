@@ -1,5 +1,6 @@
 module Backend exposing (..)
 
+import Common exposing (defaultSettings)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
 import Sha256 exposing (sha256)

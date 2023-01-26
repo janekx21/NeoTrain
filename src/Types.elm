@@ -30,7 +30,7 @@ type alias Lesson =
     { title : String, content : String }
 
 
-type alias Typing =
+type alias TypingModel =
     { dictation : Dictation
     , madeError : Bool
     , errors : List TypeError
@@ -67,8 +67,6 @@ type alias Bucket =
     List PastDictation
 
 
-{-| String that only allows chars and numbers
--}
 type alias BackendModel =
     { currentSaltIndex : Int
     , passiveUsers : Dict Username User
@@ -112,18 +110,8 @@ type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
     | NoOpFrontendMsg
-    | PreviewBook Lesson
-    | OpenBook Lesson
     | Back
-    | KeyDown KeyboardKey
-    | KeyUp KeyboardKey
-    | ToSettings
     | SetSettings Settings
-    | ToStatistic
-    | ToTypingStatistic PastDictation
-    | TickTypingTime
-    | Pause
-    | Play
     | OnHover Hover
     | SetUsername String
     | SetPassword String
@@ -132,8 +120,22 @@ type FrontendMsg
     | TryRegister String String
     | Logout
     | FinishedDictation (List TypeError) Lesson Float Posix
-    | ToggleKeyboard
     | ChangePage Page
+    | PageMsg PageMsg
+
+
+type PageMsg
+    = TypingMsg TypingMsg
+
+
+type TypingMsg
+    = KeyDown KeyboardKey
+    | KeyUp KeyboardKey
+    | TickTypingTime
+    | Pause
+    | Play
+    | ToggleKeyboard
+    | Exit
 
 
 type alias Hover =
@@ -148,7 +150,7 @@ type ToBackend
     = UpdateSettings Settings
     | GetSettings
     | InsertUser Username String
-      -- | RemoveUser
+      -- | todo RemoveUser
     | InsertSession Username String
     | GetSession
     | RemoveSession
@@ -171,7 +173,7 @@ type ToFrontend
 
 type Page
     = MenuPage Menu
-    | TypingPage Typing
+    | TypingPage TypingModel
     | TypingStatisticPage PastDictation
     | SettingsPage
     | StatisticPage Hover
@@ -185,11 +187,6 @@ type alias Auth =
     , passwordVisibility : Bool
     , failed : LoginFail
     }
-
-
-defaultAuth : Auth
-defaultAuth =
-    { username = "", failed = NotAsked, password = "", passwordVisibility = False }
 
 
 type LoginFail
@@ -217,17 +214,6 @@ type Layout
 type KeyboardKey
     = Character Char
     | Control String
-
-
-defaultSettings : Settings
-defaultSettings =
-    { blockOnError = CorrectLetter
-    , fontSize = 32
-    , paddingLeft = 20
-    , paddingRight = 20
-    , layout = Neo
-    , theme = ElectricFields
-    }
 
 
 type Theme
