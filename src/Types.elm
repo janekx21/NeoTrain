@@ -110,22 +110,18 @@ type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
     | NoOpFrontendMsg
+    | PageMsg PageMsg
     | Back
     | SetSettings Settings
     | OnHover Hover
-    | SetUsername String
-    | SetPassword String
-    | SetVisibility Bool
-    | TryLogin String String
-    | TryRegister String String
     | Logout
     | FinishedDictation (List TypeError) Lesson Float Posix
     | ChangePage Page
-    | PageMsg PageMsg
 
 
 type PageMsg
     = TypingMsg TypingMsg
+    | AuthMsg AuthMsg
 
 
 type TypingMsg
@@ -136,6 +132,15 @@ type TypingMsg
     | Play
     | ToggleKeyboard
     | Exit
+
+
+type AuthMsg
+    = SetUsername String
+    | SetPassword String
+    | SetVisibility Bool
+    | TryLogin String String
+    | TryRegister String String
+    | ToInfo
 
 
 type alias Hover =
@@ -177,16 +182,21 @@ type Page
     | TypingStatisticPage PastDictation
     | SettingsPage
     | StatisticPage Hover
-    | AuthPage Auth
+    | AuthPage AuthModel
     | InfoPage
 
 
-type alias Auth =
+type alias AuthModel =
     { username : String
     , password : String
     , passwordVisibility : Bool
     , failed : LoginFail
     }
+
+
+type AuthResult
+    = JustModel AuthModel
+    | ToInfoPage
 
 
 type LoginFail

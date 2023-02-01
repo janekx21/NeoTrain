@@ -109,8 +109,8 @@ backButton t msg =
     roundedButton t msg (materialIcon Icons.arrow_back) 'b'
 
 
-infoButton t =
-    roundedButton t (ChangePage InfoPage) (materialIcon Icons.info) 'i'
+infoButton t msg =
+    roundedButton t msg (materialIcon Icons.info) 'i'
 
 
 statisticButton t =
@@ -340,7 +340,7 @@ pageTitle page =
             "Info"
 
 
-defaultAuth : Auth
+defaultAuth : AuthModel
 defaultAuth =
     { username = "", failed = NotAsked, password = "", passwordVisibility = False }
 

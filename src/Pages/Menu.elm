@@ -36,7 +36,7 @@ view t model menu =
         settingsButton =
             roundedButton t (ChangePage SettingsPage) (materialIcon Icons.settings) 's'
     in
-    column [ spacing 32, topRightBar [ infoButton t, statisticButton t, settingsButton ] ]
+    column [ spacing 32, topRightBar [ infoButton t (ChangePage InfoPage), statisticButton t, settingsButton ] ]
         [ title "Dictations"
         , row
             [ spacing 40 ]

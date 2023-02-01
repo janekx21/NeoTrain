@@ -120,36 +120,6 @@ update frontendMsg model =
                 _ ->
                     ( model, Cmd.none )
 
-        SetUsername string ->
-            case model.page of
-                AuthPage page ->
-                    ( { model | page = AuthPage { page | username = string } }, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
-
-        SetPassword string ->
-            case model.page of
-                AuthPage page ->
-                    ( { model | page = AuthPage { page | password = string } }, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
-
-        SetVisibility bool ->
-            case model.page of
-                AuthPage page ->
-                    ( { model | page = AuthPage { page | passwordVisibility = bool } }, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
-
-        TryLogin username password ->
-            ( model, Lamdera.sendToBackend <| InsertSession username password )
-
-        TryRegister username password ->
-            ( model, Lamdera.sendToBackend <| InsertUser username password )
-
         Logout ->
             ( model, Lamdera.sendToBackend <| RemoveSession )
 
@@ -167,14 +137,32 @@ update frontendMsg model =
             ( { model | page = page }, Cmd.none )
 
         PageMsg pageMsg ->
-            case ( pageMsg, model.page ) of
-                ( TypingMsg msg, TypingPage pageModel ) ->
-                    Pages.Typing.update msg model.settings pageModel
-                        |> Tuple.mapFirst (\mp -> mp |> Maybe.map TypingPage |> Maybe.withDefault (MenuPage { current = Nothing }))
-                        |> Tuple.mapFirst (\page -> { model | page = page })
+            updatePage pageMsg model |> Tuple.mapFirst (\page -> { model | page = page })
 
-                _ ->
-                    ( model, Cmd.none )
+
+updatePage : PageMsg -> Model -> ( Page, Cmd FrontendMsg )
+updatePage pageMsg model =
+    case ( pageMsg, model.page ) of
+        ( TypingMsg msg, TypingPage pageModel ) ->
+            Pages.Typing.update msg model.settings pageModel
+                |> Tuple.mapFirst (Maybe.map TypingPage >> Maybe.withDefault (MenuPage { current = Nothing }))
+
+        ( AuthMsg authMsg, AuthPage authModel ) ->
+            Pages.Auth.update authMsg authModel
+                |> Tuple.mapFirst mapAuth
+
+        _ ->
+            ( model.page, Cmd.none )
+
+
+mapAuth : AuthResult -> Page
+mapAuth authResult =
+    case authResult of
+        JustModel m ->
+            AuthPage m
+
+        ToInfoPage ->
+            InfoPage
 
 
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
@@ -229,7 +217,6 @@ view model =
     , body =
         [ ptMonoLink
         , styleTag t
-        , faviconLink
         , layoutWith (layoutOptions t)
             [ width fill, height fill, Background.color <| wheat t, Font.color <| black t ]
             (el
@@ -237,8 +224,8 @@ view model =
                 , centerY
                 , Border.color <| black t
                 , Border.width 1
-                , padding appPadding
                 , Border.rounded 16
+                , padding appPadding
                 , previewLabel
                 ]
              <|
@@ -270,7 +257,7 @@ body model =
             Pages.Statistic.view t hover model.statistic
 
         AuthPage page ->
-            Pages.Auth.view t page
+            Pages.Auth.view t page |> map (PageMsg << AuthMsg)
 
         InfoPage ->
             Pages.Info.view t
@@ -325,12 +312,3 @@ styleTag t =
 }
 """
         ]
-
-
-faviconLink =
-    Html.node "link"
-        [ Html.Attributes.rel "shortcut icon"
-        , Html.Attributes.type_ "image/x-icon"
-        , Html.Attributes.href "/favicon.svg"
-        ]
-        []
