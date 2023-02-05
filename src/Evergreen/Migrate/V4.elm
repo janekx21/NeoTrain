@@ -70,13 +70,13 @@ frontendModel old =
         migrated =
             { key = old.key
             , page = New.AuthPage defaultAuth
+            , userCount = 1
             , settings = migrateSettings old.settings
             , statistic = List.map migrateStatistic old.statistic
             , authorised = old.authorised
-            , userCount = 1
             }
     in
-    ModelMigrated ( migrated, Cmd.none )
+    ModelUnchanged
 
 
 backendModel : Old.BackendModel -> ModelMigration New.BackendModel New.BackendMsg
