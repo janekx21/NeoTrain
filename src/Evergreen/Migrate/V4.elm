@@ -67,7 +67,6 @@ migrateStatistic old =
 frontendModel : Old.FrontendModel -> ModelMigration New.FrontendModel New.FrontendMsg
 frontendModel old =
     let
-        migrated : New.FrontendModel
         migrated =
             { key = old.key
             , page = New.AuthPage defaultAuth
