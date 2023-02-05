@@ -56,6 +56,15 @@ defaultAuth =
     { username = "", failed = New.NotAsked, password = "", passwordVisibility = False }
 
 
+migrateStatistic : Old.PastDictation -> New.PastDictation
+migrateStatistic old =
+    { errors = old.errors
+    , lesson = old.lesson
+    , duration = old.duration
+    , finished = old.finished
+    }
+
+
 frontendModel : Old.FrontendModel -> ModelMigration New.FrontendModel New.FrontendMsg
 frontendModel old =
     let
@@ -64,7 +73,7 @@ frontendModel old =
             { key = old.key
             , page = New.AuthPage defaultAuth
             , settings = migrateSettings old.settings
-            , statistic = List.map identity old.statistic
+            , statistic = List.map migrateStatistic old.statistic
             , authorised = old.authorised
             , userCount = 1
             }
