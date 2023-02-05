@@ -1,6 +1,5 @@
 module Evergreen.Migrate.V4 exposing (..)
 
-import Common exposing (defaultAuth)
 import Evergreen.V3.Types as Old
 import Evergreen.V4.Types as New
 import Lamdera.Migrations exposing (..)
