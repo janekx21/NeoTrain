@@ -59,17 +59,17 @@ defaultAuth =
 frontendModel : Old.FrontendModel -> ModelMigration New.FrontendModel New.FrontendMsg
 frontendModel old =
     let
-        new : New.FrontendModel
-        new =
+        migrated : New.FrontendModel
+        migrated =
             { key = old.key
             , page = New.AuthPage defaultAuth
             , settings = migrateSettings old.settings
-            , statistic = old.statistic
+            , statistic = List.map identity old.statistic
             , authorised = old.authorised
             , userCount = 1
             }
     in
-    ModelMigrated ( new, Cmd.none )
+    ModelMigrated ( migrated, Cmd.none )
 
 
 backendModel : Old.BackendModel -> ModelMigration New.BackendModel New.BackendMsg
