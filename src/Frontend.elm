@@ -29,6 +29,7 @@ type alias Model =
 --noinspection ElmUnusedSymbol
 
 
+app : { init : Lamdera.Url -> Nav.Key -> ( Model, Cmd FrontendMsg ), view : Model -> Browser.Document FrontendMsg, update : FrontendMsg -> Model -> ( Model, Cmd FrontendMsg ), updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg ), subscriptions : Model -> Sub FrontendMsg, onUrlRequest : UrlRequest -> FrontendMsg, onUrlChange : Url.Url -> FrontendMsg }
 app =
     Lamdera.frontend
         { init = init
@@ -48,8 +49,9 @@ init _ key =
       , settings = defaultSettings
       , statistic = []
       , authorised = False
+      , usersCount2 = 1 --min one
       }
-    , Cmd.batch [ Lamdera.sendToBackend GetSession ]
+    , Cmd.batch [ Lamdera.sendToBackend GetSession, Lamdera.sendToBackend GetUserCount ]
     )
 
 
@@ -134,7 +136,13 @@ update frontendMsg model =
             )
 
         ChangePage page ->
-            ( { model | page = page }, Cmd.none )
+            ( { model | page = page }
+            , if page == InfoPage then
+                Lamdera.sendToBackend GetUserCount
+
+              else
+                Cmd.none
+            )
 
         PageMsg pageMsg ->
             updatePage pageMsg model |> Tuple.mapFirst (\page -> { model | page = page })
@@ -196,6 +204,9 @@ updateFromBackend msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        UpdateUserCount count ->
+            ( { model | usersCount2 = count }, Cmd.none )
+
 
 subscriptions : Model -> Sub FrontendMsg
 subscriptions model =
@@ -235,6 +246,7 @@ view model =
     }
 
 
+body : Model -> Element FrontendMsg
 body model =
     let
         t =
@@ -260,9 +272,10 @@ body model =
             Pages.Auth.view t page |> map (PageMsg << AuthMsg)
 
         InfoPage ->
-            Pages.Info.view t
+            Pages.Info.view model.usersCount2 t
 
 
+layoutOptions : Theme -> { options : List Option }
 layoutOptions t =
     { options =
         [ focusStyle
@@ -274,6 +287,7 @@ layoutOptions t =
     }
 
 
+previewLabel : Attribute msg
 previewLabel =
     inFront <|
         el
@@ -287,6 +301,7 @@ previewLabel =
             text "preview"
 
 
+ptMonoLink : Html.Html msg
 ptMonoLink =
     Html.node "link"
         [ Html.Attributes.href "https://fonts.googleapis.com/css2?family=PT+Mono&display=swap"
@@ -297,6 +312,7 @@ ptMonoLink =
 
 {-| this changes the sidebar to look more like the theme
 -}
+styleTag : Theme -> Html.Html msg
 styleTag t =
     Html.node "style"
         []

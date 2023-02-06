@@ -3,7 +3,7 @@ module Types exposing (..)
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Dict exposing (Dict)
-import Lamdera exposing (ClientId, SessionId)
+import Lamdera exposing (SessionId)
 import Time exposing (Posix)
 import Url exposing (Url)
 
@@ -18,6 +18,7 @@ type alias FrontendModel =
     , settings : Settings
     , statistic : List PastDictation
     , authorised : Bool
+    , usersCount2 : Int
     }
 
 
@@ -161,6 +162,7 @@ type ToBackend
     | RemoveSession
     | ConsStatistic PastDictation
     | GetStatistic
+    | GetUserCount
 
 
 type ToFrontend
@@ -170,6 +172,7 @@ type ToFrontend
     | LoginSuccessful
     | LoginFailed
     | UpdateStatistic (List PastDictation)
+    | UpdateUserCount Int
 
 
 

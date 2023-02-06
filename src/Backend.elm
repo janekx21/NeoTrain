@@ -17,6 +17,7 @@ type alias Model =
 --noinspection ElmUnusedSymbol
 
 
+app : { init : ( Model, Cmd BackendMsg ), update : BackendMsg -> Model -> ( Model, Cmd BackendMsg ), updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg ), subscriptions : Model -> Sub BackendMsg }
 app =
     Lamdera.backend
         { init = init
@@ -26,10 +27,12 @@ app =
         }
 
 
+hour : number
 hour =
     1000 * 60 * 60
 
 
+month : number
 month =
     hour * 24 * 30
 
@@ -205,6 +208,13 @@ updateFromFrontend sessionId clientId msg model =
 
                 Nothing ->
                     ( model, throwOut )
+
+        GetUserCount ->
+            let
+                count =
+                    List.length <| allUsers <| model
+            in
+            ( model, Lamdera.sendToFrontend clientId <| UpdateUserCount count )
 
 
 allUsers : { a | passiveUsers : Dict Username User, activeSessions : Dict SessionId Session } -> List User
