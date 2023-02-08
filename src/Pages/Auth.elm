@@ -6,7 +6,7 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import Icon
+import Generated.Icon
 import Lamdera
 import Material.Icons as Icons
 import Types exposing (..)
@@ -42,7 +42,7 @@ view t { username, password, passwordVisibility, failed } =
             [ width fill, Background.color <| wheat t, Border.width 1, Border.color <| black t, Border.rounded 0 ]
 
         eyeButton =
-            Input.button [ height fill, padding 10, tooltip "Show password" ]
+            Input.button [ height fill, padding 10, tooltip "Zeige password an" ]
                 { label =
                     materialIcon
                         (if passwordVisibility then
@@ -55,7 +55,7 @@ view t { username, password, passwordVisibility, failed } =
                 }
 
         heading =
-            inFront <| row [ centerX, Font.size 72, moveUp 156, Font.underline ] [ text "Neo Train ", el [ moveUp 14, moveLeft 1 ] <| html <| Icon.icon <| toHex <| black t ]
+            inFront <| el [ centerX, moveUp 140, scale 1.4 ] <| html <| Generated.Icon.icon <| toHex <| black t
     in
     column [ spacing 32, heading, topRightBar [ infoButton t ToInfo ] ]
         [ title "Login / Register"
@@ -64,10 +64,10 @@ view t { username, password, passwordVisibility, failed } =
                 none
 
             WrongUsernameOrPassword ->
-                el [ Font.color <| primary t ] <| text "Wrong username or password!"
+                el [ Font.color <| primary t ] <| text "Falscher Username oder falsches Password!"
 
             UsernameOrPasswordInvalid ->
-                paragraph [ Font.color <| primary t, width (px 300) ] [ text "Username should be [A-z]. Password should be IBM valid password length 10." ]
+                paragraph [ Font.color <| primary t, width (px 300) ] [ text "Username muss [A-z] Länge min 3. Password muss IBM valide und Länge min. 10" ]
         , column [ spacing 8, width fill ]
             [ subTitle "Username"
             , Input.username inputStyle

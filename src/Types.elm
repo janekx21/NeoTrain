@@ -229,7 +229,11 @@ type KeyboardKey
     | Control String
 
 
-type Theme
+type alias Theme =
+    { name : ThemeName, dark : Bool }
+
+
+type ThemeName
     = WheatField
     | ElectricFields
     | CandyLand

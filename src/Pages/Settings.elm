@@ -23,55 +23,106 @@ view t settings =
             viewSettingsItem t label (SetSettings { settings | blockOnError = setting }) (settings.blockOnError == setting)
 
         layoutSettingItem layout =
-            viewSettingsItem t (layoutNames layout) (SetSettings { settings | layout = layout }) (settings.layout == layout)
+            viewSettingsItem t (text <| layoutNames layout) (SetSettings { settings | layout = layout }) (settings.layout == layout)
 
-        themeSettingItem ( label, setting ) =
-            viewSettingsItem t label (SetSettings { settings | theme = setting }) (settings.theme == setting)
+        themeSettingItem ( themeString, themeName ) =
+            let
+                theme =
+                    { t | name = themeName }
+
+                box color =
+                    el [ width (px 16), height (px 16), Background.color color, Border.width 1, Border.color (invertLightness color) ] <| none
+
+                th =
+                    { t | name = themeName }
+
+                label =
+                    row [ spacing 8 ]
+                        [ box <| black th
+                        , box <| wheat th
+                        , box <| primary th
+                        , box <| secondary th
+                        , text themeString
+                        ]
+            in
+            viewSettingsItem t label (SetSettings { settings | theme = theme }) (settings.theme.name == themeName)
+
+        themeDarkSettingsButton : Bool -> Bool -> Element FrontendMsg
+        themeDarkSettingsButton dark active =
+            Input.button
+                (buttonAttributes t
+                    ++ (if active then
+                            activeAttributes t
+
+                        else
+                            []
+                       )
+                )
+                { label =
+                    materialIcon
+                        (if dark then
+                            Icons.dark_mode
+
+                         else
+                            Icons.light_mode
+                        )
+                , onPress = Just <| SetSettings { settings | theme = { t | dark = dark } }
+                }
 
         logoutButton =
             roundedButton t Logout (materialIcon Icons.logout) 'l'
     in
     column [ topLeftBar [ backButton t Back, logoutButton ], spacing 48 ]
-        [ title "Settings"
+        [ title "Einstellungen"
         , row [ spacing 48 ]
             [ column
                 [ spacing 32, alignTop ]
-                [ settingsBlock "Layout Preview" <|
+                [ settingsBlock "Layout Vorschau" <|
                     column [ width fill, Border.color <| black t, Border.width 1 ] <|
                         List.map layoutSettingItem layouts
-                , settingsBlock "Blocking"
+                , settingsBlock "Blockierung"
                     (column [ width fill, Border.color <| black t, Border.width 1 ]
-                        [ blockSettingItem "Waiting for one backspace" OneBackspace
-                        , blockSettingItem "Waiting for the correct letter" CorrectLetter
+                        [ blockSettingItem (text "Warte auf ein Backspace") OneBackspace
+                        , blockSettingItem (text "Warte auf richtiges Zeichen") CorrectLetter
                         ]
                     )
                 ]
             , column [ spacing 32, alignTop ]
-                [ settingsBlock "Chars left and right of cursor" <|
+                [ settingsBlock "Zeichen links und rechts vom Cursor" <|
                     column [ width fill, spacing 8 ]
                         [ slider t 0 50 settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = value })
                         , slider t 0 50 settings.paddingRight (\value -> SetSettings { settings | paddingRight = value })
                         ]
                 , settingsBlock "Theme" <|
-                    column [ width fill, Border.color <| black t, Border.width 1 ] <|
-                        List.map themeSettingItem themes
+                    column [ width fill, spacing 8 ]
+                        [ column [ width fill, Border.color <| black t, Border.width 1 ] <|
+                            List.map themeSettingItem themes
+                        , row [ spacing 8 ]
+                            [ themeDarkSettingsButton True t.dark
+                            , themeDarkSettingsButton False (not t.dark)
+                            ]
+                        ]
                 ]
             ]
         ]
 
 
-viewSettingsItem t labelText msg active =
+viewSettingsItem t label msg active =
     Input.button
         ([ width fill ]
             ++ itemAttributes t
             ++ (if active then
-                    [ Background.color <| secondary t, Font.color <| wheat t ]
+                    activeAttributes t
 
                 else
                     []
                )
         )
-        { label = text labelText, onPress = Just msg }
+        { label = label, onPress = Just msg }
+
+
+activeAttributes t =
+    [ Background.color <| secondary t, Font.color <| wheat t ]
 
 
 slider : Theme -> Float -> Float -> Int -> (Int -> msg) -> Element msg

@@ -19,9 +19,9 @@ view t model menu =
             case menu.current of
                 Just lesson ->
                     column [ height fill, spacing 32 ]
-                        [ block "Char count" <| text <| String.fromInt <| String.length lesson.content
-                        , block "Word count" <| text <| String.fromInt <| List.length <| String.split " " <| lesson.content
-                        , block "Preview" <| paragraph [ width (px 400), height fill ] [ text (lesson.content |> Common.truncate 140) ]
+                        [ block "Zeichenanzahl" <| text <| String.fromInt <| String.length lesson.content
+                        , block "Wortanzahl" <| text <| String.fromInt <| List.length <| String.split " " <| lesson.content
+                        , block "Vorschau" <| paragraph [ width (px 400), height fill ] [ text (lesson.content |> Common.truncate 140) ]
                         , el [ alignRight, alignBottom ] <| squareButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (text "Start") 'r'
                         ]
 
@@ -37,7 +37,7 @@ view t model menu =
             roundedButton t (ChangePage SettingsPage) (materialIcon Icons.settings) 's'
     in
     column [ spacing 32, topRightBar [ infoButton t (ChangePage InfoPage), statisticButton t, settingsButton ] ]
-        [ title "Dictations"
+        [ title "Diktate"
         , row
             [ spacing 40 ]
             [ column
@@ -69,7 +69,7 @@ viewMenuItem t doneCount book =
         { label =
             row [ spacing 8 ]
                 [ text (book.title ++ " (" ++ printSeconds ((book.content |> String.length |> toFloat) / charsPerSecond) ++ ")")
-                , el [ tooltip <| "done this " ++ String.fromInt doneCount ++ "x" ] <| check
+                , el [ tooltip <| "geübt " ++ String.fromInt doneCount ++ "x" ] <| check
                 ]
         , onPress = Just <| ChangePage <| MenuPage { current = Just book }
         }

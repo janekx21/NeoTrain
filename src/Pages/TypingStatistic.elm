@@ -29,28 +29,28 @@ view t past =
         , topLeftBar [ backButton t Back ]
         , bottomCenterBar [ roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (materialIcon Icons.refresh) 'r' ]
         ]
-        [ title "Your Typing Statistic"
+        [ title "Deine Tippstatistik"
         , column [ spacing 8 ]
-            [ subTitle "Time"
-            , text <| "Duration: " ++ printSeconds duration
-            , text <| "Chars per Minute: " ++ (String.fromInt <| round <| charsPerMinute lesson duration)
-            , text <| "Words per Minute: " ++ (String.fromInt <| round <| wordsPerMinute lesson duration)
+            [ subTitle "Zeit"
+            , text <| "Dauer: " ++ printSeconds duration
+            , text <| "Zeichen pro Minute(CPM): " ++ (String.fromInt <| round <| charsPerMinute lesson duration)
+            , text <| "Wörter pro Minute(WPM): " ++ (String.fromInt <| round <| wordsPerMinute lesson duration)
             ]
         , column [ spacing 8 ]
-            [ subTitle "Errors Rate"
-            , text <| "Count: " ++ String.fromInt (List.length errors)
-            , text <| "Percent: " ++ errorPercent lesson errors
+            [ subTitle "Fehlerrate"
+            , text <| "Anzahl: " ++ String.fromInt (List.length errors)
+            , text <| "Prozent: " ++ errorPercent lesson errors
             ]
         , column [ spacing 8 ]
-            [ subTitle "Errors"
+            [ subTitle "Fehler"
             , if List.isEmpty grouped then
-                smile "There are no errors"
+                smile "Du hast keine Fehler gemacht"
 
               else
                 wrappedRow [ spacing 16, width (fill |> maximum 650) ] (grouped |> List.map (viewError t))
             ]
         , column [ spacing 8, width fill ]
-            [ subTitle "Points"
+            [ subTitle "Punkte"
             , el [ padding 8, centerX ] <| el [ Font.size 32, Font.bold, padding 8, Border.color <| primary t, Border.width 1 ] <| text <| String.fromInt <| points past
             ]
         ]

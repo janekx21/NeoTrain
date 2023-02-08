@@ -1,10 +1,12 @@
 module Common exposing (..)
 
+import Color
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
+import Generated.Layouts
 import Hex
 import Html.Attributes
 import Material.Icons as Icons
@@ -198,51 +200,71 @@ black =
 
 resolveColor : NamedColor -> Theme -> Color
 resolveColor color theme =
-    case theme of
-        WheatField ->
-            case color of
-                Primary ->
-                    rgb255 243 145 146
+    let
+        rgb =
+            case theme.name of
+                WheatField ->
+                    case color of
+                        Primary ->
+                            rgb255 243 145 146
 
-                Secondary ->
-                    rgb255 175 134 132
+                        Secondary ->
+                            rgb255 175 134 132
 
-                White ->
-                    rgb255 255 249 231
+                        White ->
+                            rgb255 255 249 231
 
-                Black ->
-                    rgb255 51 51 41
+                        Black ->
+                            rgb255 51 51 41
 
-        ElectricFields ->
-            case color of
-                Primary ->
-                    rgb255 180 210 115
+                ElectricFields ->
+                    case color of
+                        Primary ->
+                            rgb255 82 97 53
 
-                Secondary ->
-                    rgb255 176 82 121
+                        Secondary ->
+                            rgb255 105 35 70
 
-                White ->
-                    rgb255 46 46 46
+                        White ->
+                            rgb255 209 209 209
 
-                Black ->
-                    rgb255 214 214 214
+                        Black ->
+                            rgb255 41 41 41
 
-        CandyLand ->
-            case color of
-                Primary ->
-                    rgb255 174 255 74
+                CandyLand ->
+                    case color of
+                        Primary ->
+                            rgb255 174 255 74
 
-                Secondary ->
-                    rgb255 247 162 172
+                        Secondary ->
+                            rgb255 247 162 172
 
-                White ->
-                    rgb255 255 255 255
+                        White ->
+                            rgb255 255 255 255
 
-                Black ->
-                    rgb255 91 27 6
+                        Black ->
+                            rgb255 91 27 6
+    in
+    if theme.dark then
+        invertLightness rgb
+
+    else
+        rgb
+
+
+invertLightness : Color -> Color
+invertLightness color =
+    toRgb color
+        |> Color.fromRgba
+        |> Color.toHsla
+        |> (\hsla -> { hsla | lightness = 1 - hsla.lightness })
+        |> Color.fromHsla
+        |> Color.toRgba
+        |> fromRgb
 
 
 
+--|> (\{ red, green, blue, alpha } -> { red = red, green = green, blue = blue, alpha = alpha })
 -- Data
 
 
@@ -257,21 +279,28 @@ lessons =
                 ++ String.repeat 2 "el [] <| text \"foo\" "
                 ++ String.repeat 2 "foo | bar | foobar | barfoo "
                 ++ String.repeat 2 "( { foo | bar = bar } ) "
+
+        neoLessons =
+            Generated.Layouts.neo |> List.map (String.join " ") |> List.indexedMap (\i t -> Lesson ("Neo Wörter Teil " ++ String.fromInt (i + 1)) t)
     in
-    [ Lesson "asdfjklö" "fjfj jfjf ff jj dd kk kddk dkdk ss ll llss slsl aa öö öaöa ööaa\ndas las jaja laff ja all fass lass fad da falls dass ff lala lfd alaaf als öd fall ad"
-    , Lesson "erui" "ee ii rr uu eiru ruii erru reiu rurr iuer reir erri reii irre iuer\nalufrei ruderaler reife alufreier lesefauleres kille arider irrer residuelle leises sauerer alaaf sie allerlei deliriöse reellere ruf ausfiele frisiere dies"
-    , Lesson "qwop" "qq pp ww oo qwop powp qwow powo pqqw owpq pqow powp woqp wwpo pqpp\nuferlose pseudofossil spediere erkiese wassre ersöffe au paarweiser diesfalls sakrale rural auffasere dieserlei kauere rasa persifliere krassere pofe kordialer spurloser"
-    , Lesson "ghtz" "ghtz tzgh ghtz ghgh tztz zztt hhgg gghh ttzz ghtz hgzt hgtz ghzt\ntarifierst reliefartiges weiterdelegiert ausgekehlte rezipiert weiterfahrt kalfaterte rostigster auszahltet fastetest fortgejagtes weglegtest taktlosester fortzieht alleeartiger herausoperiertest getrotzter wohldosierte lautstark topaktuelles"
-    , Lesson "vncm" "vncm mcnv vncm cvnm mnvc cvnm mmcc nnvv cmvn mvnc cmcn ccmm vncm\nunversehrtestes kastrierenden weltvergessenen zugespachtelt spielstark einheizen umzuquartierenden werksinterne zweiziffriges jugendfreier weiterrutschte durchpausten zupfenden vertrottelt chiffreartiges durchgefallen entdecktes wasserlöslicheres anfindende antioligarchischen"
-    , Lesson "yb" "yy bb yy bb by yb yyyb bbby bbyy yybb bbbb yyyb\nalkylsubstituierten altbayerische hypnophob nylonbestrumpftem hyperbolischem hybridogenes hypnophober currygelben branchentypischen embryologischem synchronisierbaren methylenblauer altlibyschem subsynaptischen royalblaue kybernetisch nichtbayerischen systembedingtem polyalphabetisch boykottbedingter"
-    , Lesson "x,." "xx .. xx .. x.x .x. xx.. x..x xxx. .... x...\nschulexternen asexuelles kontextspezifischem. textiler praxisfeldbezogenen oxidfrei. extrapolierende durchexerziertest kontextbasiertem textlastige exhumierter. textnahes retroflex wetterexponierter extrascharfe. explodierender linksextremster fehlerfixiert. annexionistischer zytotoxisch"
-    , Lesson "Ein Satz" "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
-    , Lesson "Spezial Zeichen" ":: -- \\\\ // !?!?!? ?! !? ^ ?! ^ ?!!??! ++ -- ++ -- +- -+ ; () () {} [] [] () {} \\\\ // ___ ||| $$ ## <> <> == && <= >= '' '' \"\" \"\" ~~ %% ``` ``` *** (+~}/$|\\#/$|[%)+?$=) ^|](>=\\/{[(`]?-(\\{/(-> =_><!^/`~&_[<_=&[>] ^<;'\"#\"$%+|~`+?)(/{*"
-    , Lesson "Elm" elmText
-    , Lesson "Junge und Berg von Chat GPT" "Es war einmal ein kleiner Junge, der in einem Dorf am Fuße eines großen Berges wohnte. Eines Tages beschloss er, den Berg zu besteigen, um zu sehen, was oben war. Er packte seinen Rucksack mit Proviant und Wasser und begann seine Reise. Der Aufstieg war beschwerlich, aber er gab nicht auf. Nach vielen Stunden erreichte er die Spitze des Berges und was er sah, übertraf seine kühnsten Träume. Er sah unendliche Wälder, kristallklare Flüsse und Täler voller wilder Blumen. Er beschloss, dass er immer wieder hierher zurückkehren würde, um die Schönheit dieses Ortes zu genießen."
-    , Lesson "Klimawandel Debatte von Chat GPT" "Die Debatte um den Klimawandel hat in den letzten Jahren stark zugenommen. Experten sind sich einig, dass der Ausstoß von Treibhausgasen und die Abholzung von Wäldern die Erderwärmung beschleunigen. Regierungen auf der ganzen Welt haben sich verpflichtet, Maßnahmen zu ergreifen, um diesem Problem entgegenzuwirken. Ein wichtiger Schritt ist die Förderung erneuerbarer Energien und die Verringerung des CO2-Ausstoßes. Auch die Wiederaufforstung von Wäldern und die Schaffung von Schutzgebieten können dazu beitragen, den Klimawandel zu bekämpfen."
-    , Lesson "DebugText" "foobar"
-    ]
+    neoLessons
+        ++ [ Lesson "Ein Satz" "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
+           , Lesson "Spezial Zeichen" ":: -- \\\\ // !?!?!? ?! !? ^ ?! ^ ?!!??! ++ -- ++ -- +- -+ ; () () {} [] [] () {} \\\\ // ___ ||| $$ ## <> <> == && <= >= '' '' \"\" \"\" ~~ %% ``` ``` *** (+~}/$|\\#/$|[%)+?$=) ^|](>=\\/{[(`]?-(\\{/(-> =_><!^/`~&_[<_=&[>] ^<;'\"#\"$%+|~`+?)(/{*"
+           , Lesson "Junge und Berg von Chat GPT" "Es war einmal ein kleiner Junge, der in einem Dorf am Fuße eines großen Berges wohnte. Eines Tages beschloss er, den Berg zu besteigen, um zu sehen, was oben war. Er packte seinen Rucksack mit Proviant und Wasser und begann seine Reise. Der Aufstieg war beschwerlich, aber er gab nicht auf. Nach vielen Stunden erreichte er die Spitze des Berges und was er sah, übertraf seine kühnsten Träume. Er sah unendliche Wälder, kristallklare Flüsse und Täler voller wilder Blumen. Er beschloss, dass er immer wieder hierher zurückkehren würde, um die Schönheit dieses Ortes zu genießen."
+           , Lesson "Klimawandel Debatte von Chat GPT" "Die Debatte um den Klimawandel hat in den letzten Jahren stark zugenommen. Experten sind sich einig, dass der Ausstoß von Treibhausgasen und die Abholzung von Wäldern die Erderwärmung beschleunigen. Regierungen auf der ganzen Welt haben sich verpflichtet, Maßnahmen zu ergreifen, um diesem Problem entgegenzuwirken. Ein wichtiger Schritt ist die Förderung erneuerbarer Energien und die Verringerung des CO2-Ausstoßes. Auch die Wiederaufforstung von Wäldern und die Schaffung von Schutzgebieten können dazu beitragen, den Klimawandel zu bekämpfen."
+           , Lesson "Elm Zeichen" elmText
+           , Lesson "Debug Text" "foobar"
+           ]
+
+
+
+--    , Lesson "asdfjklö" "fjfj jfjf ff jj dd kk kddk dkdk ss ll llss slsl aa öö öaöa ööaa\ndas las jaja laff ja all fass lass fad da falls dass ff lala lfd alaaf als öd fall ad"
+--    , Lesson "erui" "ee ii rr uu eiru ruii erru reiu rurr iuer reir erri reii irre iuer\nalufrei ruderaler reife alufreier lesefauleres kille arider irrer residuelle leises sauerer alaaf sie allerlei deliriöse reellere ruf ausfiele frisiere dies"
+--    , Lesson "qwop" "qq pp ww oo qwop powp qwow powo pqqw owpq pqow powp woqp wwpo pqpp\nuferlose pseudofossil spediere erkiese wassre ersöffe au paarweiser diesfalls sakrale rural auffasere dieserlei kauere rasa persifliere krassere pofe kordialer spurloser"
+--    , Lesson "ghtz" "ghtz tzgh ghtz ghgh tztz zztt hhgg gghh ttzz ghtz hgzt hgtz ghzt\ntarifierst reliefartiges weiterdelegiert ausgekehlte rezipiert weiterfahrt kalfaterte rostigster auszahltet fastetest fortgejagtes weglegtest taktlosester fortzieht alleeartiger herausoperiertest getrotzter wohldosierte lautstark topaktuelles"
+--    , Lesson "vncm" "vncm mcnv vncm cvnm mnvc cvnm mmcc nnvv cmvn mvnc cmcn ccmm vncm\nunversehrtestes kastrierenden weltvergessenen zugespachtelt spielstark einheizen umzuquartierenden werksinterne zweiziffriges jugendfreier weiterrutschte durchpausten zupfenden vertrottelt chiffreartiges durchgefallen entdecktes wasserlöslicheres anfindende antioligarchischen"
+--    , Lesson "yb" "yy bb yy bb by yb yyyb bbby bbyy yybb bbbb yyyb\nalkylsubstituierten altbayerische hypnophob nylonbestrumpftem hyperbolischem hybridogenes hypnophober currygelben branchentypischen embryologischem synchronisierbaren methylenblauer altlibyschem subsynaptischen royalblaue kybernetisch nichtbayerischen systembedingtem polyalphabetisch boykottbedingter"
+--    , Lesson "x,." "xx .. xx .. x.x .x. xx.. x..x xxx. .... x...\nschulexternen asexuelles kontextspezifischem. textiler praxisfeldbezogenen oxidfrei. extrapolierende durchexerziertest kontextbasiertem textlastige exhumierter. textnahes retroflex wetterexponierter extrascharfe. explodierender linksextremster fehlerfixiert. annexionistischer zytotoxisch"
 
 
 layoutNames layout =
@@ -306,9 +335,9 @@ layouts =
 
 
 themes =
-    [ ( "WheatField", WheatField )
-    , ( "ElectricFields", ElectricFields )
-    , ( "CandyLand", CandyLand )
+    [ ( "Wheat Field", WheatField )
+    , ( "Electric Fields", ElectricFields )
+    , ( "Candy Land", CandyLand )
     ]
 
 
@@ -322,16 +351,16 @@ pageTitle page =
             "Menu"
 
         TypingPage _ ->
-            "Typing"
+            "Tippen"
 
         TypingStatisticPage _ ->
             "Typing Statistic"
 
         SettingsPage ->
-            "Settings"
+            "Einstellungen"
 
         StatisticPage _ ->
-            "Statistic"
+            "Statistik"
 
         AuthPage _ ->
             "Login"
@@ -352,5 +381,5 @@ defaultSettings =
     , paddingLeft = 20
     , paddingRight = 20
     , layout = Neo
-    , theme = ElectricFields
+    , theme = { name = ElectricFields, dark = True }
     }

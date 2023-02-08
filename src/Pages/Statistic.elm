@@ -43,7 +43,7 @@ view t hovering statistic =
                 Just h ->
                     column [ spacing 8 ]
                         [ text h.lesson.title
-                        , text <| "Points: " ++ (String.fromInt <| points h)
+                        , text <| "Punkte: " ++ (String.fromInt <| points h)
                         ]
 
                 Nothing ->
@@ -51,12 +51,12 @@ view t hovering statistic =
                     column [ spacing 8 ] [ text " ", text " " ]
     in
     column [ topLeftBar [ backButton t Back ], spacing 48, width fill ]
-        [ title "Statistic"
+        [ title "Statistik"
         , row [ width fill, spacing 48 ]
             [ column [ spacing 8, width fill, alignTop ]
-                [ subTitle "Past Dictations"
+                [ subTitle "Letzte Diktate"
                 , if List.isEmpty statistic then
-                    info "You have no past dictations"
+                    info "Du hast noch keine Diktate geschrieben"
 
                   else
                     el [ width fill ] <|
@@ -71,7 +71,7 @@ view t hovering statistic =
                         <|
                             List.map viewPast statistic
                 ]
-            , column [ spacing 8, alignTop ] [ subTitle "Point Progression", viewPointsGraph t hovering statistic, viewHover ]
+            , column [ spacing 8, alignTop ] [ subTitle "Punktefortschritt", viewPointsGraph t hovering statistic, viewHover ]
             ]
         ]
 
@@ -84,7 +84,7 @@ viewPointsGraph t hovering dictations =
                 |> bucketStatistic
                 |> Dict.toList
     in
-    el [ width <| px 300, height fill ] <|
+    el [ width <| px 400, height fill ] <|
         html <|
             C.chart
                 ([ CA.height 300
@@ -109,7 +109,7 @@ viewPointsGraph t hovering dictations =
                        )
                 )
                 [ C.yTicks [ CA.color (toHex <| black t) ]
-                , C.yLabels [ CA.color (toHex <| black t) ]
+                , C.yLabels [ CA.color (toHex <| black t), CA.fontSize 16 ]
                 , C.grid [ CA.color (toHex <| secondary t) ]
                 , C.series (Tuple.first >> toFloat)
                     [ C.interpolated (Tuple.second >> medianPoints >> toFloat) [ CA.color <| toHex <| primary t, CA.width 4 ] [ CA.circle, CA.size 8 ]

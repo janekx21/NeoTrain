@@ -3,4 +3,4 @@ elm-stuff
 /.idea/
 /.vscode/
 
-/tools/german.dic
+/tools/*.csv
