@@ -84,6 +84,17 @@ printSeconds seconds =
         (seconds |> round |> String.fromInt) ++ "sec"
 
 
+printTime seconds =
+    let
+        min =
+            String.fromInt (round seconds // 60)
+
+        sec =
+            (round seconds |> modBy 60) |> String.fromInt |> String.padLeft 2 '0'
+    in
+    min ++ ":" ++ sec
+
+
 topLeftBar =
     inFront << row [ moveUp (appPadding + 21), moveLeft (appPadding + 21), spacing 16 ]
 
@@ -96,15 +107,15 @@ bottomCenterBar =
     inFront << row [ moveDown (appPadding + 21), spacing 16, centerX, alignBottom ]
 
 
-toHex color =
-    color
-        |> toRgb
-        |> (\{ red, green, blue } -> [ red, green, blue ])
-        |> List.map (\c -> floor <| c * 256)
-        |> List.map Hex.toString
-        |> List.map (String.padLeft 2 '0')
-        |> String.concat
-        |> String.cons '#'
+toHex =
+    toRgb
+        >> (\{ red, green, blue } -> [ red, green, blue ])
+        >> List.map floor
+        >> List.map (\c -> c * 255)
+        >> List.map Hex.toString
+        >> List.map (String.padLeft 2 '0')
+        >> String.concat
+        >> String.cons '#'
 
 
 backButton t msg =
@@ -244,6 +255,20 @@ resolveColor color theme =
 
                         Black ->
                             rgb255 91 27 6
+
+                NeoClassic ->
+                    case color of
+                        Primary ->
+                            rgb255 6 136 156
+
+                        Secondary ->
+                            rgb255 74 164 74
+
+                        White ->
+                            rgb255 255 255 255
+
+                        Black ->
+                            rgb255 0 0 0
     in
     if theme.dark then
         invertLightness rgb
@@ -264,7 +289,6 @@ invertLightness color =
 
 
 
---|> (\{ red, green, blue, alpha } -> { red = red, green = green, blue = blue, alpha = alpha })
 -- Data
 
 
@@ -280,10 +304,18 @@ lessons =
                 ++ String.repeat 2 "foo | bar | foobar | barfoo "
                 ++ String.repeat 2 "( { foo | bar = bar } ) "
 
-        neoLessons =
-            Generated.Layouts.neo |> List.map (String.join " ") |> List.indexedMap (\i t -> Lesson ("Neo Wörter Teil " ++ String.fromInt (i + 1)) t)
+        toLesson : Layout -> ( String, String, List String ) -> Lesson
+        toLesson layout ( _, must, words ) =
+            Lesson (layoutNames layout ++ " " ++ must) (String.join " " words)
+
+        toLessons : ( Layout, List ( String, String, List String ) ) -> List Lesson
+        toLessons ( layout, list ) =
+            list |> List.map (toLesson layout)
+
+        wordLessons =
+            Generated.Layouts.data |> List.concatMap toLessons
     in
-    neoLessons
+    wordLessons
         ++ [ Lesson "Ein Satz" "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
            , Lesson "Spezial Zeichen" ":: -- \\\\ // !?!?!? ?! !? ^ ?! ^ ?!!??! ++ -- ++ -- +- -+ ; () () {} [] [] () {} \\\\ // ___ ||| $$ ## <> <> == && <= >= '' '' \"\" \"\" ~~ %% ``` ``` *** (+~}/$|\\#/$|[%)+?$=) ^|](>=\\/{[(`]?-(\\{/(-> =_><!^/`~&_[<_=&[>] ^<;'\"#\"$%+|~`+?)(/{*"
            , Lesson "Junge und Berg von Chat GPT" "Es war einmal ein kleiner Junge, der in einem Dorf am Fuße eines großen Berges wohnte. Eines Tages beschloss er, den Berg zu besteigen, um zu sehen, was oben war. Er packte seinen Rucksack mit Proviant und Wasser und begann seine Reise. Der Aufstieg war beschwerlich, aber er gab nicht auf. Nach vielen Stunden erreichte er die Spitze des Berges und was er sah, übertraf seine kühnsten Träume. Er sah unendliche Wälder, kristallklare Flüsse und Täler voller wilder Blumen. Er beschloss, dass er immer wieder hierher zurückkehren würde, um die Schönheit dieses Ortes zu genießen."
@@ -291,16 +323,6 @@ lessons =
            , Lesson "Elm Zeichen" elmText
            , Lesson "Debug Text" "foobar"
            ]
-
-
-
---    , Lesson "asdfjklö" "fjfj jfjf ff jj dd kk kddk dkdk ss ll llss slsl aa öö öaöa ööaa\ndas las jaja laff ja all fass lass fad da falls dass ff lala lfd alaaf als öd fall ad"
---    , Lesson "erui" "ee ii rr uu eiru ruii erru reiu rurr iuer reir erri reii irre iuer\nalufrei ruderaler reife alufreier lesefauleres kille arider irrer residuelle leises sauerer alaaf sie allerlei deliriöse reellere ruf ausfiele frisiere dies"
---    , Lesson "qwop" "qq pp ww oo qwop powp qwow powo pqqw owpq pqow powp woqp wwpo pqpp\nuferlose pseudofossil spediere erkiese wassre ersöffe au paarweiser diesfalls sakrale rural auffasere dieserlei kauere rasa persifliere krassere pofe kordialer spurloser"
---    , Lesson "ghtz" "ghtz tzgh ghtz ghgh tztz zztt hhgg gghh ttzz ghtz hgzt hgtz ghzt\ntarifierst reliefartiges weiterdelegiert ausgekehlte rezipiert weiterfahrt kalfaterte rostigster auszahltet fastetest fortgejagtes weglegtest taktlosester fortzieht alleeartiger herausoperiertest getrotzter wohldosierte lautstark topaktuelles"
---    , Lesson "vncm" "vncm mcnv vncm cvnm mnvc cvnm mmcc nnvv cmvn mvnc cmcn ccmm vncm\nunversehrtestes kastrierenden weltvergessenen zugespachtelt spielstark einheizen umzuquartierenden werksinterne zweiziffriges jugendfreier weiterrutschte durchpausten zupfenden vertrottelt chiffreartiges durchgefallen entdecktes wasserlöslicheres anfindende antioligarchischen"
---    , Lesson "yb" "yy bb yy bb by yb yyyb bbby bbyy yybb bbbb yyyb\nalkylsubstituierten altbayerische hypnophob nylonbestrumpftem hyperbolischem hybridogenes hypnophober currygelben branchentypischen embryologischem synchronisierbaren methylenblauer altlibyschem subsynaptischen royalblaue kybernetisch nichtbayerischen systembedingtem polyalphabetisch boykottbedingter"
---    , Lesson "x,." "xx .. xx .. x.x .x. xx.. x..x xxx. .... x...\nschulexternen asexuelles kontextspezifischem. textiler praxisfeldbezogenen oxidfrei. extrapolierende durchexerziertest kontextbasiertem textlastige exhumierter. textnahes retroflex wetterexponierter extrascharfe. explodierender linksextremster fehlerfixiert. annexionistischer zytotoxisch"
 
 
 layoutNames layout =
@@ -338,6 +360,7 @@ themes =
     [ ( "Wheat Field", WheatField )
     , ( "Electric Fields", ElectricFields )
     , ( "Candy Land", CandyLand )
+    , ( "Neo Classic", NeoClassic )
     ]
 
 

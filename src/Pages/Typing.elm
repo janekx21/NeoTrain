@@ -4,6 +4,7 @@ import Browser.Events
 import Common exposing (..)
 import Element exposing (..)
 import Element.Background as Background
+import Element.Border as Border
 import Element.Font as Font
 import Lamdera.Json as Decode exposing (Decoder)
 import Material.Icons as Icons
@@ -168,7 +169,7 @@ advanceDictation dict =
 
 
 view : Theme -> TypingModel -> Settings -> Element TypingMsg
-view t { dictation, layer, madeError, paused, showKeyboard } settings =
+view t { dictation, layer, madeError, paused, showKeyboard, duration } settings =
     let
         color =
             if madeError then
@@ -213,9 +214,24 @@ view t { dictation, layer, madeError, paused, showKeyboard } settings =
 
         playButton =
             roundedButton t Play (materialIcon Icons.play_arrow) 'p'
+
+        doneCount =
+            String.length dictation.prev
+
+        restCount =
+            String.length dictation.next + 1
+
+        progressBar =
+            row [ spacing 8, width fill ]
+                [ row [ width fill, height (px 22) ]
+                    [ el [ width (fillPortion doneCount), height fill, Background.color <| black t ] <| none
+                    , el [ width (fillPortion restCount), height fill, Border.width 1, Border.color <| black t ] <| none
+                    ]
+                , text <| printTime duration
+                ]
     in
     column
-        [ spacing 64
+        [ spacing 48
         , topLeftBar
             [ backButton t Exit
             , if paused then
@@ -240,6 +256,7 @@ view t { dictation, layer, madeError, paused, showKeyboard } settings =
 
           else
             none
+        , progressBar
         ]
 
 

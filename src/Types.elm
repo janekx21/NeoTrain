@@ -237,6 +237,7 @@ type ThemeName
     = WheatField
     | ElectricFields
     | CandyLand
+    | NeoClassic
 
 
 type NamedColor

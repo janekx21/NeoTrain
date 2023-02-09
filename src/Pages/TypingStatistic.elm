@@ -32,7 +32,7 @@ view t past =
         [ title "Deine Tippstatistik"
         , column [ spacing 8 ]
             [ subTitle "Zeit"
-            , text <| "Dauer: " ++ printSeconds duration
+            , text <| "Dauer: " ++ printTime duration
             , text <| "Zeichen pro Minute(CPM): " ++ (String.fromInt <| round <| charsPerMinute lesson duration)
             , text <| "Wörter pro Minute(WPM): " ++ (String.fromInt <| round <| wordsPerMinute lesson duration)
             ]
