@@ -110,8 +110,8 @@ bottomCenterBar =
 toHex =
     toRgb
         >> (\{ red, green, blue } -> [ red, green, blue ])
-        >> List.map floor
         >> List.map (\c -> c * 255)
+        >> List.map floor
         >> List.map Hex.toString
         >> List.map (String.padLeft 2 '0')
         >> String.concat
