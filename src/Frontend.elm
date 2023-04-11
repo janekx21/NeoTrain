@@ -43,7 +43,7 @@ app =
 
 
 init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
-init _ key =
+init url key =
     ( { key = key
       , page = AuthPage defaultAuth
       , settings = defaultSettings
@@ -310,6 +310,7 @@ ptMonoLink =
         []
 
 
+
 {-| this changes the sidebar to look more like the theme
 -}
 styleTag : Theme -> Html.Html msg
@@ -324,7 +325,7 @@ styleTag t =
     border-left: 1px solid """ ++ (toHex <| black t) ++ """;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: """ ++ (toHex <| black t) ++ """;
+    background-color: """ ++ (toHex <| black t) ++ """;
 }
 """
         ]
