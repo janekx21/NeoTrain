@@ -1,10 +1,10 @@
-<div style="text-align: center">
+<center>
 
 ![Neo Train Logo](public/icon_with_text.svg)
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/janekx21/NeoTrain?style=for-the-badge)
 
-</div>
+</center>
 
 [Neo Train](https://neo-train.lamdera.app/) is an online touch typing trainer for the [neo layout](https://www.neo-layout.org/). It is build with [lamdera](https://lamdera.com/), which uses [elm](https://elm-lang.org/). The Page supports the layouts Neo, Bone, NeoQwertz, AdNW, KOY, NeoQwerty, Vou and Mine. It has randomly generated lectures for each, as well as a couple of handwritten dictates.
 
