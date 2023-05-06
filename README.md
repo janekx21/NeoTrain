@@ -1,6 +1,7 @@
 <div style="text-align: center">
 
 ![Neo Train Logo](public/icon_with_text.svg)
+
 ![GitHub last commit](https://img.shields.io/github/last-commit/janekx21/NeoTrain?style=for-the-badge)
 
 </div>
