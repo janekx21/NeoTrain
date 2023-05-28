@@ -34,6 +34,9 @@ update authMsg authModel =
             -- change page
             ( ToInfoPage, Cmd.none )
 
+        WithoutLogin ->
+            ( ToMenuPage, Cmd.none )
+
 
 view : Theme -> AuthModel -> Element AuthMsg
 view t { username, password, passwordVisibility, failed } =
@@ -87,12 +90,21 @@ view t { username, password, passwordVisibility, failed } =
                 , show = passwordVisibility
                 }
             ]
-        , row [ spacing 16, width fill ]
-            [ Input.button
-                ([ width fill ] ++ buttonAttributes t)
-                { label = el [ centerX ] <| text "Login", onPress = Just <| TryLogin username password }
+        , column [ spacing 16, width fill ]
+            [ row [ spacing 16, width fill ]
+                [ Input.button
+                    ([ width fill ] ++ buttonAttributes t)
+                    { label = el [ centerX ] <| text "Login", onPress = Just <| TryLogin username password }
+                , Input.button
+                    ([ width fill ] ++ buttonAttributes t)
+                    { label = el [ centerX ] <| text "Register", onPress = Just <| TryRegister username password }
+                ]
             , Input.button
-                ([ width fill ] ++ buttonAttributes t)
-                { label = el [ centerX ] <| text "Register", onPress = Just <| TryRegister username password }
+                ([ width fill ] ++ buttonAttributes t ++ primaryAttributes t)
+                { label = row [ centerX, spacing 4 ] [ text "Without Login", materialIcon Icons.arrow_forward ], onPress = Just WithoutLogin }
             ]
         ]
+
+
+primaryAttributes t =
+    [ Background.color <| secondary t, Font.color <| wheat t ]

@@ -18,7 +18,7 @@ type alias FrontendModel =
     , settings : Settings
     , statistic : List PastDictation
     , authorised : Bool
-    , usersCount2 : Int
+    , usersCount : Int
     }
 
 
@@ -142,6 +142,7 @@ type AuthMsg
     | TryLogin String String
     | TryRegister String String
     | ToInfo
+    | WithoutLogin
 
 
 type alias Hover =
@@ -200,6 +201,7 @@ type alias AuthModel =
 type AuthResult
     = JustModel AuthModel
     | ToInfoPage
+    | ToMenuPage
 
 
 type LoginFail

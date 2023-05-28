@@ -49,7 +49,7 @@ init url key =
       , settings = defaultSettings
       , statistic = []
       , authorised = False
-      , usersCount2 = 1 --min one
+      , usersCount = 1 --min one
       }
     , Cmd.batch [ Lamdera.sendToBackend GetSession, Lamdera.sendToBackend GetUserCount ]
     )
@@ -172,6 +172,9 @@ mapAuth authResult =
         ToInfoPage ->
             InfoPage
 
+        ToMenuPage ->
+            MenuPage { current = Nothing }
+
 
 updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
 updateFromBackend msg model =
@@ -183,7 +186,11 @@ updateFromBackend msg model =
             ( { model | statistic = pastDictations }, Cmd.none )
 
         KickOut ->
-            ( { model | page = AuthPage defaultAuth, authorised = False }, Cmd.none )
+            if model.authorised then
+                ( { model | authorised = False, page = AuthPage defaultAuth }, Cmd.none )
+
+            else
+                ( { model | authorised = False }, Cmd.none )
 
         LoginSuccessful ->
             ( { model | page = MenuPage <| Menu Nothing, authorised = True }, Cmd.batch [ Lamdera.sendToBackend GetSettings, Lamdera.sendToBackend GetStatistic ] )
@@ -205,7 +212,7 @@ updateFromBackend msg model =
                     ( model, Cmd.none )
 
         UpdateUserCount count ->
-            ( { model | usersCount2 = count }, Cmd.none )
+            ( { model | usersCount = count }, Cmd.none )
 
 
 subscriptions : Model -> Sub FrontendMsg
@@ -230,20 +237,39 @@ view model =
         , styleTag t
         , layoutWith (layoutOptions t)
             [ width fill, height fill, Background.color <| wheat t, Font.color <| black t ]
-            (el
+          <|
+            el
                 [ centerX
                 , centerY
                 , Border.color <| black t
                 , Border.width 1
                 , Border.rounded 16
                 , padding appPadding
+                , authorisedMessage model.authorised
                 , previewLabel
                 ]
-             <|
+            <|
                 body model
-            )
         ]
     }
+
+
+authorisedMessage : Bool -> Attribute msg
+authorisedMessage authorized =
+    if authorized then
+        inFront <| none
+
+    else
+        inFront <|
+            el
+                [ alignBottom
+                , alignLeft
+                , moveDown 32
+                , alpha 0.2
+                , tooltip "You are not logged in and you progress will be lost"
+                ]
+            <|
+                text "not logged in"
 
 
 body : Model -> Element FrontendMsg
@@ -272,7 +298,7 @@ body model =
             Pages.Auth.view t page |> map (PageMsg << AuthMsg)
 
         InfoPage ->
-            Pages.Info.view model.usersCount2 t
+            Pages.Info.view model.usersCount t
 
 
 layoutOptions : Theme -> { options : List Option }
@@ -308,7 +334,6 @@ ptMonoLink =
         , Html.Attributes.rel "stylesheet"
         ]
         []
-
 
 
 {-| this changes the sidebar to look more like the theme
