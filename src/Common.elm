@@ -379,7 +379,7 @@ pageTitle page =
         TypingStatisticPage _ ->
             "Typing Statistic"
 
-        SettingsPage ->
+        SettingsPage _ ->
             "Einstellungen"
 
         StatisticPage _ ->
@@ -406,3 +406,34 @@ defaultSettings =
     , layout = Neo
     , theme = { name = ElectricFields, dark = True }
     }
+
+
+layerUrl layout layer =
+    let
+        name =
+            case layout of
+                Neo ->
+                    "neo"
+
+                NeoQwertz ->
+                    "neo_qwertz"
+
+                Bone ->
+                    "bone"
+
+                AdNW ->
+                    "adnw"
+
+                KOY ->
+                    "koy"
+
+                NeoQwerty ->
+                    "neo_qwerty"
+
+                Vou ->
+                    "vou"
+
+                Mine ->
+                    "mine"
+    in
+    "https://dl.neo-layout.org/grafik/bilder-einzeln/flat/" ++ name ++ "-" ++ String.fromInt layer ++ "-tkl.svg"

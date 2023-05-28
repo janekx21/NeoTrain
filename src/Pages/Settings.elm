@@ -6,12 +6,20 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
+import Html.Attributes
 import Material.Icons as Icons
 import Types exposing (..)
 
 
-view : Theme -> Settings -> Element FrontendMsg
-view t settings =
+update : SettingsMsg -> { layer : Int } -> ( { layer : Int }, Cmd msg )
+update msg model =
+    case msg of
+        SetLayer layer ->
+            ( { layer = layer }, Cmd.none )
+
+
+view : Theme -> Settings -> { layer : Int } -> Element FrontendMsg
+view t settings { layer } =
     let
         settingsBlock label child =
             column [ width fill, spacing 8 ]
@@ -69,8 +77,21 @@ view t settings =
                 , onPress = Just <| SetSettings { settings | theme = { t | dark = dark } }
                 }
 
+        layerButton : Int -> Bool -> Element FrontendMsg
+        layerButton layer2 active =
+            viewSettingsItem t
+                (text <| String.fromInt layer2)
+                (PageMsg <| SettingsMsg <| SetLayer layer2)
+                (layer2 == layer)
+
         logoutButton =
             roundedButton t Logout (materialIcon Icons.logout) 'l'
+
+        aspect w h =
+            htmlAttribute <| Html.Attributes.style "aspect-ratio" (String.fromInt w ++ " / " ++ String.fromInt h)
+
+        sizedImage w h attr options =
+            el [ width fill, aspect w h, inFront <| image attr options ] none
     in
     column [ topLeftBar [ backButton t Back, logoutButton ], spacing 48 ]
         [ title "Einstellungen"
@@ -103,6 +124,10 @@ view t settings =
                             ]
                         ]
                 ]
+            ]
+        , row [ width fill, spacing 16 ]
+            [ column [ Border.color <| black t, Border.width 1 ] (List.range 1 6 |> List.map (\n -> layerButton n False))
+            , sizedImage 535 183 [ width fill ] { src = layerUrl settings.layout layer, description = "" }
             ]
         ]
 

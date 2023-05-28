@@ -123,6 +123,7 @@ type FrontendMsg
 type PageMsg
     = TypingMsg TypingMsg
     | AuthMsg AuthMsg
+    | SettingsMsg SettingsMsg
 
 
 type TypingMsg
@@ -143,6 +144,10 @@ type AuthMsg
     | TryRegister String String
     | ToInfo
     | WithoutLogin
+
+
+type SettingsMsg
+    = SetLayer Int
 
 
 type alias Hover =
@@ -184,7 +189,7 @@ type Page
     = MenuPage Menu
     | TypingPage TypingModel
     | TypingStatisticPage PastDictation
-    | SettingsPage
+    | SettingsPage { layer : Int }
     | StatisticPage Hover
     | AuthPage AuthModel
     | InfoPage

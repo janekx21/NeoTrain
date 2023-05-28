@@ -93,7 +93,7 @@ update frontendMsg model =
                         TypingStatisticPage _ ->
                             StatisticPage []
 
-                        SettingsPage ->
+                        SettingsPage _ ->
                             MenuPage { current = Nothing }
 
                         StatisticPage _ ->
@@ -158,6 +158,10 @@ updatePage pageMsg model =
         ( AuthMsg authMsg, AuthPage authModel ) ->
             Pages.Auth.update authMsg authModel
                 |> Tuple.mapFirst mapAuth
+
+        ( SettingsMsg msg, SettingsPage page ) ->
+            Pages.Settings.update msg page
+                |> Tuple.mapFirst SettingsPage
 
         _ ->
             ( model.page, Cmd.none )
@@ -288,8 +292,8 @@ body model =
         TypingStatisticPage past ->
             Pages.TypingStatistic.view t past
 
-        SettingsPage ->
-            Pages.Settings.view t model.settings
+        SettingsPage page ->
+            Pages.Settings.view t model.settings page
 
         StatisticPage hover ->
             Pages.Statistic.view t hover model.statistic

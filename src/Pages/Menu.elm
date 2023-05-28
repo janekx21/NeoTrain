@@ -34,7 +34,7 @@ view t model menu =
                 |> List.length
 
         settingsButton =
-            roundedButton t (ChangePage SettingsPage) (materialIcon Icons.settings) 's'
+            roundedButton t (ChangePage <| SettingsPage { layer = 1 }) (materialIcon Icons.settings) 's'
     in
     column [ spacing 32, topRightBar [ infoButton t (ChangePage InfoPage), statisticButton t, settingsButton ] ]
         [ title "Diktate"
