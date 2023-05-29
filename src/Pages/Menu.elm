@@ -4,6 +4,7 @@ import Common exposing (..)
 import Element exposing (..)
 import Element.Border as Border
 import Element.Input as Input
+import Html.Attributes as HA
 import Material.Icons as Icons
 import Pages.Typing
 import Types exposing (..)
@@ -21,7 +22,7 @@ view t model menu =
                     column [ height fill, spacing 32 ]
                         [ block "Zeichenanzahl" <| text <| String.fromInt <| String.length lesson.content
                         , block "Wortanzahl" <| text <| String.fromInt <| List.length <| String.split " " <| lesson.content
-                        , block "Vorschau" <| paragraph [ width (px 400), height fill ] [ text (lesson.content |> Common.truncate 140) ]
+                        , block "Vorschau" <| paragraph [ width (px 500), height fill, htmlAttribute <| HA.style "text-align" "justify" ] [ text (lesson.content |> Common.truncate 350) ]
                         , el [ alignRight, alignBottom ] <| squareButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (text "Start") 'r'
                         ]
 
