@@ -247,7 +247,7 @@ view model =
                 , centerY
                 , Border.color <| black t
                 , Border.width 1
-                , Border.rounded 16
+                , Border.rounded (model.settings.theme.rounding * 2)
                 , padding appPadding
                 , authorisedMessage model.authorised
                 , previewLabel

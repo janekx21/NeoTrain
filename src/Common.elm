@@ -143,13 +143,15 @@ squareButton t onPress label shortcut =
 
 
 buttonAttributes t =
-    [ Border.color <| black t, Border.width 1, Background.color <| wheat t ] ++ itemAttributes t
+    [ Background.color <| wheat t ] ++ itemBorder t ++ itemAttributes t
 
 
 itemAttributes t =
-    [ padding 8
-    , mouseOver (mouseOverAttributes t)
-    ]
+    [ padding 8, mouseOver (mouseOverAttributes t), Border.rounded t.rounding ]
+
+
+itemBorder t =
+    [ Border.width 1, Border.rounded t.rounding, Border.color <| black t ]
 
 
 mouseOverAttributes t =
@@ -404,7 +406,7 @@ defaultSettings =
     , paddingLeft = 20
     , paddingRight = 20
     , layout = Neo
-    , theme = { name = ElectricFields, dark = True }
+    , theme = { name = ElectricFields, dark = True, rounding = 10 }
     }
 
 
@@ -437,3 +439,11 @@ layerUrl layout layer =
                     "mine"
     in
     "https://dl.neo-layout.org/grafik/bilder-einzeln/flat/" ++ name ++ "-" ++ String.fromInt layer ++ "-tkl.svg"
+
+
+aspect w h =
+    htmlAttribute <| Html.Attributes.style "aspect-ratio" (String.fromInt w ++ " / " ++ String.fromInt h)
+
+
+sizedImage w h attr options =
+    el [ width fill, aspect w h, inFront <| image attr options ] none

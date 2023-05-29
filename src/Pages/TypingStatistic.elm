@@ -51,7 +51,19 @@ view t past =
             ]
         , column [ spacing 8, width fill ]
             [ subTitle "Punkte"
-            , el [ padding 8, centerX ] <| el [ Font.size 32, Font.bold, padding 8, Border.color <| primary t, Border.width 1 ] <| text <| String.fromInt <| points past
+            , el [ padding 8, centerX ] <|
+                el
+                    (itemBorder t
+                        ++ [ Font.size 32
+                           , Font.bold
+                           , padding 8
+                           , Border.color <| primary t
+                           ]
+                    )
+                <|
+                    text <|
+                        String.fromInt <|
+                            points past
             ]
         ]
 

@@ -61,13 +61,13 @@ view t hovering statistic =
                   else
                     el [ width fill ] <|
                         column
-                            [ width fill
-                            , height (fill |> maximum 512)
-                            , scrollbarY
-                            , Border.width 1
-                            , Border.color <| black t
-                            , Element.Events.onMouseLeave <| OnHover <| []
-                            ]
+                            (itemBorder t
+                                ++ [ width fill
+                                   , height (fill |> maximum 512)
+                                   , scrollbarY
+                                   , Element.Events.onMouseLeave <| OnHover <| []
+                                   ]
+                            )
                         <|
                             List.map viewPast statistic
                 ]

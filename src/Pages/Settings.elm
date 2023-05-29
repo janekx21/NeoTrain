@@ -39,7 +39,16 @@ view t settings { layer } =
                     { t | name = themeName }
 
                 box color =
-                    el [ width (px 16), height (px 16), Background.color color, Border.width 1, Border.color (invertLightness color) ] <| none
+                    el
+                        (itemBorder t
+                            ++ [ width (px 16)
+                               , height (px 16)
+                               , Background.color color
+                               , Border.color (invertLightness color)
+                               ]
+                        )
+                    <|
+                        none
 
                 th =
                     { t | name = themeName }
@@ -86,12 +95,6 @@ view t settings { layer } =
 
         logoutButton =
             roundedButton t Logout (materialIcon Icons.logout) 'l'
-
-        aspect w h =
-            htmlAttribute <| Html.Attributes.style "aspect-ratio" (String.fromInt w ++ " / " ++ String.fromInt h)
-
-        sizedImage w h attr options =
-            el [ width fill, aspect w h, inFront <| image attr options ] none
     in
     column [ topLeftBar [ backButton t Back, logoutButton ], spacing 48 ]
         [ title "Einstellungen"
@@ -99,10 +102,19 @@ view t settings { layer } =
             [ column
                 [ spacing 32, alignTop ]
                 [ settingsBlock "Layout Vorschau" <|
-                    column [ width fill, Border.color <| black t, Border.width 1 ] <|
+                    column
+                        ([ width fill
+                         ]
+                            ++ itemBorder t
+                        )
+                    <|
                         List.map layoutSettingItem layouts
                 , settingsBlock "Blockierung"
-                    (column [ width fill, Border.color <| black t, Border.width 1 ]
+                    (column
+                        ([ width fill
+                         ]
+                            ++ itemBorder t
+                        )
                         [ blockSettingItem (text "Warte auf ein Backspace") OneBackspace
                         , blockSettingItem (text "Warte auf richtiges Zeichen") CorrectLetter
                         ]
@@ -116,17 +128,29 @@ view t settings { layer } =
                         ]
                 , settingsBlock "Theme" <|
                     column [ width fill, spacing 8 ]
-                        [ column [ width fill, Border.color <| black t, Border.width 1 ] <|
+                        [ column ([ width fill ] ++ itemBorder t) <|
                             List.map themeSettingItem themes
                         , row [ spacing 8 ]
                             [ themeDarkSettingsButton True t.dark
                             , themeDarkSettingsButton False (not t.dark)
                             ]
                         ]
+                , settingsBlock "Rundung der Ecken" <|
+                    slider t
+                        0
+                        20
+                        settings.theme.rounding
+                        (\value ->
+                            let
+                                theme =
+                                    { t | rounding = value }
+                            in
+                            SetSettings { settings | theme = theme }
+                        )
                 ]
             ]
         , row [ width fill, spacing 16 ]
-            [ column [ Border.color <| black t, Border.width 1 ] (List.range 1 6 |> List.map (\n -> layerButton n False))
+            [ column (itemBorder t) (List.range 1 6 |> List.map (\n -> layerButton n False))
             , sizedImage 535 183 [ width fill ] { src = layerUrl settings.layout layer, description = "" }
             ]
         ]
@@ -158,14 +182,14 @@ slider t min max value msg =
     in
     row [ width fill, spacing 8 ]
         [ el [ monospace ] <| text <| String.padLeft padding ' ' (String.fromInt value)
-        , el [ width fill, Border.color <| black t, Border.width 1 ] <|
+        , el ([ width fill ] ++ itemBorder t) <|
             Input.slider [ width fill ]
                 { onChange = round >> msg
                 , label = Input.labelHidden ""
                 , min = min
                 , max = max
                 , value = toFloat value
-                , thumb = Input.thumb [ width (px 20), height (px 20), Background.color <| black t ]
+                , thumb = Input.thumb [ width (px 20), height (px 20), Background.color <| black t, Border.rounded t.rounding ]
                 , step = Just 1
                 }
         ]

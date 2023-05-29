@@ -42,7 +42,7 @@ view : Theme -> AuthModel -> Element AuthMsg
 view t { username, password, passwordVisibility, failed } =
     let
         inputStyle =
-            [ width fill, Background.color <| wheat t, Border.width 1, Border.color <| black t, Border.rounded 0 ]
+            [ width fill, Background.color <| wheat t ] ++ itemBorder t
 
         eyeButton =
             Input.button [ height fill, padding 10, tooltip "Zeige password an" ]

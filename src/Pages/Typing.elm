@@ -221,11 +221,17 @@ view t { dictation, layer, madeError, paused, showKeyboard, duration } settings 
         restCount =
             String.length dictation.next + 1
 
+        leftBorder =
+            Border.roundEach { topLeft = t.rounding, bottomLeft = t.rounding, topRight = 0, bottomRight = 0 }
+
+        rightBorder =
+            Border.roundEach { topRight = t.rounding, bottomRight = t.rounding, topLeft = 0, bottomLeft = 0 }
+
         progressBar =
             row [ spacing 8, width fill ]
                 [ row [ width fill, height (px 22) ]
-                    [ el [ width (fillPortion doneCount), height fill, Background.color <| black t ] <| none
-                    , el [ width (fillPortion restCount), height fill, Border.width 1, Border.color <| black t ] <| none
+                    [ el (itemBorder t ++ [ width (fillPortion doneCount), height fill, Background.color <| black t, leftBorder ]) <| none
+                    , el (itemBorder t ++ [ width (fillPortion restCount), height fill, rightBorder ]) <| none
                     ]
                 , text <| printTime duration
                 ]
@@ -252,7 +258,8 @@ view t { dictation, layer, madeError, paused, showKeyboard, duration } settings 
           else
             typewriter
         , if showKeyboard then
-            image [ width fill ] { src = layerUrl settings.layout layer, description = "" }
+            --image [ width fill ] { src = layerUrl settings.layout layer, description = "" }
+            sizedImage 535 183 [ width fill ] { src = layerUrl settings.layout layer, description = "" }
 
           else
             none

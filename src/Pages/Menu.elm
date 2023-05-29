@@ -41,7 +41,7 @@ view t model menu =
         , row
             [ spacing 40 ]
             [ column
-                [ Border.color <| black t, Border.width 1, height (fill |> maximum 512), scrollbarY, width fill ]
+                (itemBorder t ++ [ height (fill |> maximum 512), scrollbarY, width fill ])
                 (lessons |> List.map (\l -> viewMenuItem t (lessonDoneCount l) l))
             , sidebar
             ]

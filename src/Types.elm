@@ -237,7 +237,7 @@ type KeyboardKey
 
 
 type alias Theme =
-    { name : ThemeName, dark : Bool }
+    { name : ThemeName, dark : Bool, rounding : Int }
 
 
 type ThemeName
