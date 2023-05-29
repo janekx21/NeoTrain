@@ -68,6 +68,7 @@ view t settings { layer } =
         themeDarkSettingsButton dark active =
             Input.button
                 (buttonAttributes t
+                    ++ [ Border.rounded <| t.rounding * 2 ]
                     ++ (if active then
                             activeAttributes t
 
@@ -101,7 +102,7 @@ view t settings { layer } =
         , row [ spacing 48 ]
             [ column
                 [ spacing 32, alignTop ]
-                [ settingsBlock "Layout Vorschau" <|
+                [ settingsBlock "Layout" <|
                     column
                         ([ width fill
                          ]
@@ -127,18 +128,18 @@ view t settings { layer } =
                         , slider t 0 50 settings.paddingRight (\value -> SetSettings { settings | paddingRight = value })
                         ]
                 , settingsBlock "Theme" <|
-                    column [ width fill, spacing 8 ]
+                    row [ width fill, spacing 8 ]
                         [ column ([ width fill ] ++ itemBorder t) <|
                             List.map themeSettingItem themes
-                        , row [ spacing 8 ]
+                        , column [ spacing 8 ]
                             [ themeDarkSettingsButton True t.dark
                             , themeDarkSettingsButton False (not t.dark)
                             ]
                         ]
-                , settingsBlock "Rundung der Ecken" <|
+                , settingsBlock "Ecken Rundung und Kanten Stärke" <|
                     slider t
                         0
-                        20
+                        18
                         settings.theme.rounding
                         (\value ->
                             let
@@ -147,6 +148,17 @@ view t settings { layer } =
                             in
                             SetSettings { settings | theme = theme }
                         )
+                , slider t
+                    0
+                    4
+                    settings.theme.borderWidth
+                    (\value ->
+                        let
+                            theme =
+                                { t | borderWidth = value }
+                        in
+                        SetSettings { settings | theme = theme }
+                    )
                 ]
             ]
         , row [ width fill, spacing 16 ]

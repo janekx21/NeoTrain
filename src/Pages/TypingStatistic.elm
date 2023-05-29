@@ -70,7 +70,7 @@ view t past =
 
 viewError : Theme -> ( Char, List TypeError ) -> Element msg
 viewError t ( char, typeErrors ) =
-    row [ spacing 8, Border.width 1, Border.color <| black t, padding 4, Border.rounded 999 ]
+    row (itemBorder t ++ [ spacing 8, padding 4, Border.rounded 999 ])
         [ el
             [ monospace
             , Font.color <| wheat t

@@ -132,7 +132,7 @@ statisticButton t =
 
 roundedButton t onPress label shortcut =
     Input.button
-        ([ Border.rounded 999 ] ++ buttonAttributes t ++ accessKey shortcut)
+        (buttonAttributes t ++ [ Border.rounded <| t.rounding * 2 ] ++ accessKey shortcut)
         { label = label, onPress = Just onPress }
 
 
@@ -147,11 +147,17 @@ buttonAttributes t =
 
 
 itemAttributes t =
-    [ padding 8, mouseOver (mouseOverAttributes t), Border.rounded t.rounding ]
+    [ padding 8
+    , mouseOver (mouseOverAttributes t)
+    , Border.rounded (t.rounding - 4)
+    ]
 
 
 itemBorder t =
-    [ Border.width 1, Border.rounded t.rounding, Border.color <| black t ]
+    [ Border.width t.borderWidth
+    , Border.rounded (t.rounding + t.borderWidth - 4)
+    , Border.color <| black t
+    ]
 
 
 mouseOverAttributes t =
@@ -231,18 +237,20 @@ resolveColor color theme =
                             rgb255 51 51 41
 
                 ElectricFields ->
-                    case color of
-                        Primary ->
-                            rgb255 82 97 53
+                    invertLightness <|
+                        invertLightnessLog 1.1 <|
+                            case color of
+                                Primary ->
+                                    rgb255 82 97 53
 
-                        Secondary ->
-                            rgb255 105 35 70
+                                Secondary ->
+                                    rgb255 105 35 70
 
-                        White ->
-                            rgb255 209 209 209
+                                White ->
+                                    rgb255 209 209 209
 
-                        Black ->
-                            rgb255 41 41 41
+                                Black ->
+                                    rgb255 41 41 41
 
                 CandyLand ->
                     case color of
@@ -271,6 +279,21 @@ resolveColor color theme =
 
                         Black ->
                             rgb255 0 0 0
+
+                Dracula ->
+                    invertLightness <|
+                        case color of
+                            Primary ->
+                                rgb255 80 250 123
+
+                            Secondary ->
+                                rgb255 255 121 198
+
+                            Black ->
+                                rgb255 248 248 242
+
+                            White ->
+                                rgb255 40 42 54
     in
     if theme.dark then
         invertLightness rgb
@@ -280,11 +303,25 @@ resolveColor color theme =
 
 
 invertLightness : Color -> Color
-invertLightness color =
+invertLightness =
+    invertLightnessLog 12
+
+
+invertLightnessLog : Float -> Color -> Color
+invertLightnessLog a =
+    let
+        func x =
+            logBase a (1 - x * (1 - 1 / a)) + 1
+    in
+    mapColorLightness func
+
+
+mapColorLightness : (Float -> Float) -> Color -> Color
+mapColorLightness func color =
     toRgb color
         |> Color.fromRgba
         |> Color.toHsla
-        |> (\hsla -> { hsla | lightness = 1 - hsla.lightness })
+        |> (\hsla -> { hsla | lightness = func hsla.lightness })
         |> Color.fromHsla
         |> Color.toRgba
         |> fromRgb
@@ -363,6 +400,7 @@ themes =
     , ( "Electric Fields", ElectricFields )
     , ( "Candy Land", CandyLand )
     , ( "Neo Classic", NeoClassic )
+    , ( "Dracula", Dracula )
     ]
 
 
@@ -406,7 +444,7 @@ defaultSettings =
     , paddingLeft = 20
     , paddingRight = 20
     , layout = Neo
-    , theme = { name = ElectricFields, dark = True, rounding = 10 }
+    , theme = { name = ElectricFields, dark = True, rounding = 10, borderWidth = 1 }
     }
 
 

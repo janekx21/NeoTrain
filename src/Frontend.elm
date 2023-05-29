@@ -243,15 +243,15 @@ view model =
             [ width fill, height fill, Background.color <| wheat t, Font.color <| black t ]
           <|
             el
-                [ centerX
-                , centerY
-                , Border.color <| black t
-                , Border.width 1
-                , Border.rounded (model.settings.theme.rounding * 2)
-                , padding appPadding
-                , authorisedMessage model.authorised
-                , previewLabel
-                ]
+                (itemBorder t
+                    ++ [ centerX
+                       , centerY
+                       , Border.rounded (t.rounding * 2)
+                       , padding appPadding
+                       , authorisedMessage model.authorised
+                       , previewLabel
+                       ]
+                )
             <|
                 body model
         ]

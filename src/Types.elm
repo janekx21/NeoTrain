@@ -237,7 +237,7 @@ type KeyboardKey
 
 
 type alias Theme =
-    { name : ThemeName, dark : Bool, rounding : Int }
+    { name : ThemeName, dark : Bool, rounding : Int, borderWidth : Int }
 
 
 type ThemeName
@@ -245,6 +245,7 @@ type ThemeName
     | ElectricFields
     | CandyLand
     | NeoClassic
+    | Dracula
 
 
 type NamedColor
