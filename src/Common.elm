@@ -488,4 +488,10 @@ aspect w h =
 
 
 sizedImage w h attr options =
-    el [ width fill, aspect w h, inFront <| image attr options ] none
+    el
+        [ width fill
+        , aspect w h
+        , htmlAttribute <| Html.Attributes.style "flex-basis" "auto"
+        , inFront <| image attr options
+        ]
+        none

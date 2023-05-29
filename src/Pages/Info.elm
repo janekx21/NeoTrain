@@ -1,6 +1,6 @@
 module Pages.Info exposing (..)
 
-import Common exposing (backButton, buttonAttributes, primary, subTitle, topLeftBar)
+import Common exposing (..)
 import Element exposing (..)
 import Element.Border as Border
 import Types exposing (..)
@@ -22,6 +22,6 @@ view userCount t =
         , paragraph [] [ text "Die Web-Anwendung ist dafür gedacht Neo über Diktate zu lernen. Fang am besten mit der obersten Lektion an und arbeite dich nach unten weiter." ]
         , row [ spacing 16, centerX ]
             [ text "Benutzerzahl"
-            , el [ padding 4, Common.monospace, Border.width 1, Border.color <| primary t, Border.rounded t.rounding ] <| text <| String.fromInt userCount
+            , el (itemBorder t ++ [ padding 4, Common.monospace, Border.color <| primary t ]) <| text <| String.fromInt userCount
             ]
         ]

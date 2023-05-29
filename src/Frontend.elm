@@ -351,9 +351,12 @@ styleTag t =
     width: 24px;
 }
 *::-webkit-scrollbar-track {
-    border-left: 1px solid """ ++ (toHex <| black t) ++ """;
+    border-left: """ ++ String.fromInt t.borderWidth ++ """px solid """ ++ (toHex <| black t) ++ """;
 }
 *::-webkit-scrollbar-thumb {
+    border-radius: """ ++ String.fromInt (t.rounding - 4) ++ """px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
     background-color: """ ++ (toHex <| black t) ++ """;
 }
 """
