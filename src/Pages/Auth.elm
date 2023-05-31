@@ -8,6 +8,8 @@ import Element.Font as Font
 import Element.Input as Input
 import Generated.Icon
 import Html as Html
+import Html.Events
+import Json.Decode as Decode
 import Lamdera
 import Material.Icons as Icons
 import Types exposing (..)
@@ -92,7 +94,13 @@ view t { username, password, passwordVisibility, failed } =
                                     ]
                                 , column [ spacing 8, width fill ]
                                     [ subTitle "Password"
-                                    , Input.currentPassword (inputStyle ++ [ inFront <| el [ alignRight ] <| eyeButton, paddingEach { inputPadding | right = 44 } ])
+                                    , Input.currentPassword
+                                        (inputStyle
+                                            ++ [ inFront <| el [ alignRight ] <| eyeButton
+                                               , paddingEach { inputPadding | right = 44 }
+                                               , onEnter <| TryLogin username password
+                                               ]
+                                        )
                                         { text = password
                                         , label = Input.labelHidden "password"
                                         , placeholder = Nothing
@@ -115,6 +123,23 @@ view t { username, password, passwordVisibility, failed } =
                 { label = row [ centerX, spacing 4 ] [ text "Without Login", materialIcon Icons.arrow_forward ], onPress = Just WithoutLogin }
             ]
         ]
+
+
+onEnter : msg -> Element.Attribute msg
+onEnter msg =
+    htmlAttribute
+        (Html.Events.on "keyup"
+            (Decode.field "key" Decode.string
+                |> Decode.andThen
+                    (\key ->
+                        if key == "Enter" then
+                            Decode.succeed msg
+
+                        else
+                            Decode.fail "Not the enter key"
+                    )
+            )
+        )
 
 
 primaryAttributes t =
