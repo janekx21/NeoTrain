@@ -84,7 +84,7 @@ view t { username, password, passwordVisibility, failed } =
                         layoutWith (layoutOptions t) [ width fill, height fill, Background.color <| wheat t, Font.color <| black t ] <|
                             column [ spacing 16, width fill ]
                                 [ column [ spacing 8, width fill ]
-                                    [ subTitle "Username"
+                                    [ subTitle "Benutzername"
                                     , Input.username inputStyle
                                         { text = username
                                         , label = Input.labelHidden "username"
@@ -120,7 +120,7 @@ view t { username, password, passwordVisibility, failed } =
                 ]
             , Input.button
                 ([ width fill ] ++ buttonAttributes t ++ primaryAttributes t)
-                { label = row [ centerX, spacing 4 ] [ text "Without Login", materialIcon Icons.arrow_forward ], onPress = Just WithoutLogin }
+                { label = row [ centerX, spacing 4 ] [ text "Ohne Login", materialIcon Icons.arrow_forward ], onPress = Just WithoutLogin }
             ]
         ]
 

@@ -349,8 +349,13 @@ styleTag t =
     background-color: """ ++ (toHex <| black t) ++ """;
 }
 * {
-    transition: color 50ms;
-    transition: background-color 50ms;
+    transition: color 50ms ease-out;
+    transition: background-color 50ms ease-out;
+    transition: scale 50ms ease-out;
+}
+:not(.s.sby) > *:hover[role=button], a:hover {
+    z-index: 1;
+    scale: 1.1;
 }
 /*animation-name: opacityOn;
 animation-duration: 50ms;

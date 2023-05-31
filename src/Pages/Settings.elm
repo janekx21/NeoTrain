@@ -201,7 +201,15 @@ slider t min max value msg =
                 , min = min
                 , max = max
                 , value = toFloat value
-                , thumb = Input.thumb [ width (px 20), height (px 20), Background.color <| black t, Border.rounded t.rounding ]
+                , thumb =
+                    Input.thumb
+                        [ width (px 20)
+                        , height (px 20)
+                        , Background.color <| black t
+                        , Border.rounded t.rounding
+
+                        -- not working :<, mouseOver (mouseOverAttributes t)
+                        ]
                 , step = Just 1
                 }
         ]
