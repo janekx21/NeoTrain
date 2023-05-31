@@ -7,6 +7,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Generated.Icon
+import Html as Html
 import Lamdera
 import Material.Icons as Icons
 import Types exposing (..)
@@ -74,25 +75,32 @@ view t { username, password, passwordVisibility, failed } =
 
             UsernameOrPasswordInvalid ->
                 paragraph [ Font.color <| primary t, width (px 300) ] [ text "Username muss [A-z] Länge min 3. Password muss IBM valide und Länge min. 10" ]
-        , column [ spacing 8, width fill ]
-            [ subTitle "Username"
-            , Input.username inputStyle
-                { text = username
-                , label = Input.labelHidden "username"
-                , placeholder = Nothing
-                , onChange = SetUsername
-                }
-            ]
-        , column [ spacing 8, width fill ]
-            [ subTitle "Password"
-            , Input.currentPassword (inputStyle ++ [ inFront <| el [ alignRight ] <| eyeButton, paddingEach { inputPadding | right = 44 } ])
-                { text = password
-                , label = Input.labelHidden "password"
-                , placeholder = Nothing
-                , onChange = SetPassword
-                , show = passwordVisibility
-                }
-            ]
+        , el [ width fill ] <|
+            html <|
+                Html.form [] <|
+                    List.singleton <|
+                        layoutWith (layoutOptions t) [ width fill, height fill, Background.color <| wheat t, Font.color <| black t ] <|
+                            column [ spacing 16, width fill ]
+                                [ column [ spacing 8, width fill ]
+                                    [ subTitle "Username"
+                                    , Input.username inputStyle
+                                        { text = username
+                                        , label = Input.labelHidden "username"
+                                        , placeholder = Nothing
+                                        , onChange = SetUsername
+                                        }
+                                    ]
+                                , column [ spacing 8, width fill ]
+                                    [ subTitle "Password"
+                                    , Input.currentPassword (inputStyle ++ [ inFront <| el [ alignRight ] <| eyeButton, paddingEach { inputPadding | right = 44 } ])
+                                        { text = password
+                                        , label = Input.labelHidden "password"
+                                        , placeholder = Nothing
+                                        , onChange = SetPassword
+                                        , show = passwordVisibility
+                                        }
+                                    ]
+                                ]
         , column [ spacing 16, width fill ]
             [ row [ spacing 16, width fill ]
                 [ Input.button

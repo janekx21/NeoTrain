@@ -6,6 +6,7 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
+import Element.Keyed
 import Generated.Layouts
 import Hex
 import Html.Attributes
@@ -131,9 +132,12 @@ statisticButton t =
 
 
 roundedButton t onPress label shortcut =
-    Input.button
-        (buttonAttributes t ++ [ Border.rounded <| t.rounding * 2 ] ++ accessKey shortcut)
-        { label = label, onPress = Just onPress }
+    Element.Keyed.el [] <|
+        ( String.fromChar shortcut
+        , Input.button
+            (buttonAttributes t ++ [ Border.rounded <| t.rounding * 2 ] ++ accessKey shortcut)
+            { label = label, onPress = Just onPress }
+        )
 
 
 squareButton t onPress label shortcut =
@@ -495,3 +499,15 @@ sizedImage w h attr options =
         , inFront <| image attr options
         ]
         none
+
+
+layoutOptions : Theme -> { options : List Option }
+layoutOptions t =
+    { options =
+        [ focusStyle
+            { backgroundColor = Nothing
+            , borderColor = Just <| wheat t
+            , shadow = Just { color = primary t, offset = ( 0, 0 ), blur = 0, size = 4 }
+            }
+        ]
+    }

@@ -306,18 +306,6 @@ body model =
             Pages.Info.view model.usersCount t
 
 
-layoutOptions : Theme -> { options : List Option }
-layoutOptions t =
-    { options =
-        [ focusStyle
-            { backgroundColor = Nothing
-            , borderColor = Just <| wheat t
-            , shadow = Just { color = primary t, offset = ( 0, 0 ), blur = 0, size = 4 }
-            }
-        ]
-    }
-
-
 previewLabel : Attribute msg
 previewLabel =
     inFront <|
