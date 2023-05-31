@@ -28,7 +28,7 @@ type alias Menu =
 
 
 type alias Lesson =
-    { title : String, content : String }
+    { layout : Maybe Layout, title : String, content : String }
 
 
 type alias TypingModel =

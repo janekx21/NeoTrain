@@ -7,6 +7,7 @@ import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
+import Element.Lazy
 import Html
 import Html.Attributes
 import Lamdera
@@ -240,7 +241,7 @@ view model =
         [ ptMonoLink
         , styleTag t
         , layoutWith (layoutOptions t)
-            [ width fill, height fill, Background.color <| wheat t, Font.color <| black t ]
+            [ width fill, height fill, Background.color <| wheat t, Font.color <| black t, scrollbarY, padding 32 ]
           <|
             el
                 (itemBorder t
@@ -359,5 +360,21 @@ styleTag t =
     border-bottom-left-radius: 0;
     background-color: """ ++ (toHex <| black t) ++ """;
 }
+* {
+    transition: color 50ms;
+    transition: background-color 50ms;
+}
+/*animation-name: opacityOn;
+animation-duration: 50ms;
+@keyframes opacityOn {
+    0% {
+        scale: 0.9;
+        opacity: 0;
+    }
+    100% {
+        scale: 1;
+        opacity: 1;
+    }
+}*/
 """
         ]

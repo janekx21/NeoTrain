@@ -36,6 +36,10 @@ view t model menu =
 
         settingsButton =
             roundedButton t (ChangePage <| SettingsPage { layer = 1 }) (materialIcon Icons.settings) 's'
+
+        lessonFilter : Lesson -> Bool
+        lessonFilter l =
+            l.layout |> Maybe.map (\y -> y == model.settings.layout) |> Maybe.withDefault True
     in
     column [ spacing 32, topRightBar [ infoButton t (ChangePage InfoPage), statisticButton t, settingsButton ] ]
         [ title "Diktate"
@@ -43,7 +47,7 @@ view t model menu =
             [ spacing 40 ]
             [ column
                 (itemBorder t ++ [ height (fill |> maximum 512), scrollbarY, width fill ])
-                (lessons |> List.map (\l -> viewMenuItem t (lessonDoneCount l) l))
+                (lessons |> List.filter lessonFilter |> List.map (\l -> viewMenuItem t (lessonDoneCount l) l))
             , sidebar
             ]
         ]

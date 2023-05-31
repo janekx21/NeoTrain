@@ -41,8 +41,11 @@ update authMsg authModel =
 view : Theme -> AuthModel -> Element AuthMsg
 view t { username, password, passwordVisibility, failed } =
     let
+        inputPadding =
+            { top = 12, bottom = 12, left = 12, right = 12 }
+
         inputStyle =
-            [ width fill, Background.color <| wheat t ] ++ itemBorder t
+            [ width fill, Background.color <| wheat t, paddingEach inputPadding ] ++ itemBorder t
 
         eyeButton =
             Input.button [ height fill, padding 10, tooltip "Zeige password an" ]
@@ -82,7 +85,7 @@ view t { username, password, passwordVisibility, failed } =
             ]
         , column [ spacing 8, width fill ]
             [ subTitle "Password"
-            , Input.currentPassword (inputStyle ++ [ inFront <| el [ alignRight ] <| eyeButton ])
+            , Input.currentPassword (inputStyle ++ [ inFront <| el [ alignRight ] <| eyeButton, paddingEach { inputPadding | right = 44 } ])
                 { text = password
                 , label = Input.labelHidden "password"
                 , placeholder = Nothing
