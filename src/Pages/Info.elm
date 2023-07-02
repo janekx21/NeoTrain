@@ -8,7 +8,7 @@ import Types exposing (..)
 
 view : Int -> Theme -> Element FrontendMsg
 view userCount t =
-    column [ topLeftBar [ backButton t Back ], spacing 16, width (px 512) ]
+    column [ topLeftBar [ backButton t Back, logoutButton t Logout ], spacing 16, width (px 512) ]
         [ subTitle "Über Neo"
         , paragraph [] [ text "Neo ist eine ergonomische Tastaturbelegung, welche für die deutsche Sprache optimiert ist. Wenn du noch mehr über Neo erfahren möchstes besuch bitte die Homepage." ]
         , el [ padding 16, centerX ] <| link (buttonAttributes t) { url = "https://www.neo-layout.org/", label = text "Neo Homepage" }

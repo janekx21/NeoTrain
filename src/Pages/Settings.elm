@@ -93,11 +93,8 @@ view t settings { layer } =
                 (text <| String.fromInt layer2)
                 (PageMsg <| SettingsMsg <| SetLayer layer2)
                 (layer2 == layer)
-
-        logoutButton =
-            roundedButton t Logout (materialIcon Icons.logout) 'l'
     in
-    column [ topLeftBar [ backButton t Back, logoutButton ], spacing 48 ]
+    column [ topLeftBar [ backButton t Back, logoutButton t Logout ], spacing 48 ]
         [ title "Einstellungen"
         , row [ spacing 48 ]
             [ column

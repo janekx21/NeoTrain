@@ -88,8 +88,8 @@ update frontendMsg model =
                         MenuPage menu ->
                             MenuPage menu
 
-                        TypingPage _ ->
-                            MenuPage { current = Nothing }
+                        TypingPage { lesson } ->
+                            MenuPage { current = Just lesson }
 
                         TypingStatisticPage _ ->
                             StatisticPage []
@@ -104,11 +104,7 @@ update frontendMsg model =
                             AuthPage loginAndRegister
 
                         InfoPage ->
-                            if model.authorised then
-                                MenuPage { current = Nothing }
-
-                            else
-                                AuthPage defaultAuth
+                            MenuPage { current = Nothing }
             in
             ( { model | page = page }, Cmd.none )
 
@@ -124,7 +120,7 @@ update frontendMsg model =
                     ( model, Cmd.none )
 
         Logout ->
-            ( model, Lamdera.sendToBackend <| RemoveSession )
+            ( { model | page = AuthPage defaultAuth }, Lamdera.sendToBackend <| RemoveSession )
 
         FinishedDictation errors lesson duration time ->
             let

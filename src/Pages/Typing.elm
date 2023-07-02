@@ -1,11 +1,14 @@
 module Pages.Typing exposing (..)
 
+import Browser.Dom as Dom
 import Browser.Events
 import Common exposing (..)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
+import Html
+import Html.Attributes
 import Lamdera.Json as Decode exposing (Decoder)
 import Material.Icons as Icons
 import Task
@@ -47,11 +50,15 @@ bookToDictation book =
 
 update : TypingMsg -> Settings -> TypingModel -> ( Maybe TypingModel, Cmd FrontendMsg )
 update typingMsg settings model =
+    let
+        focusCommand =
+            Dom.focus "hidden-input" |> Task.attempt (\_ -> NoOpFrontendMsg)
+    in
     case typingMsg of
         KeyDown keyboardKey ->
             case updateDictation keyboardKey settings model of
                 Just next ->
-                    ( Just next, Cmd.none )
+                    ( Just next, focusCommand )
 
                 Nothing ->
                     ( Just model, Time.now |> Task.perform (FinishedDictation model.errors model.lesson model.duration) )
@@ -82,7 +89,7 @@ update typingMsg settings model =
             ( Just { model | layer = layer }, Cmd.none )
 
         TickTypingTime ->
-            ( Just { model | duration = model.duration + ticksPerSecond }, Cmd.none )
+            ( Just { model | duration = model.duration + ticksPerSecond }, focusCommand )
 
         Pause ->
             ( Just { model | paused = True }, Cmd.none )
@@ -201,7 +208,7 @@ view t { dictation, layer, madeError, paused, showKeyboard, duration } settings 
             el [ centerX, monospace, Font.size 32 ] <|
                 text <|
                     String.pad (settings.paddingLeft + settings.paddingRight + 1) ' ' <|
-                        "Paused. Press Any Key"
+                        "Pausiert. Drücke Leertaste"
 
         pauseButton =
             roundedButton t Pause (materialIcon Icons.pause) 'p'
@@ -235,6 +242,9 @@ view t { dictation, layer, madeError, paused, showKeyboard, duration } settings 
                     ]
                 , text <| printTime duration
                 ]
+
+        hiddenInput =
+            el [ width (px 0), height (px 0), htmlAttribute <| Html.Attributes.style "overflow" "hidden" ] <| html <| Html.input [ Html.Attributes.id "hidden-input" ] []
     in
     column
         [ spacing 48
@@ -251,6 +261,7 @@ view t { dictation, layer, madeError, paused, showKeyboard, duration } settings 
               else
                 keyboardButton
             ]
+        , inFront hiddenInput
         ]
         [ if paused then
             pausedEl

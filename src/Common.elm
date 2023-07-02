@@ -146,6 +146,10 @@ squareButton t onPress label shortcut =
         { label = label, onPress = Just onPress }
 
 
+logoutButton t msg =
+    roundedButton t msg (materialIcon Icons.logout) 'l'
+
+
 buttonAttributes t =
     [ Background.color <| wheat t ] ++ itemBorder t ++ itemAttributes t
 
