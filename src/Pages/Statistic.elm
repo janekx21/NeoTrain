@@ -12,6 +12,7 @@ import Element.Events
 import Element.Input as Input
 import Html.Attributes
 import Material.Icons as Icons
+import Pages.TypingStatistic as TypingStatistic
 import Set exposing (Set)
 import Time exposing (Posix)
 import Types exposing (..)
@@ -35,7 +36,7 @@ view t hovering statistic =
                        )
                 )
                 { label = text <| (String.fromInt <| points past) ++ "\t" ++ past.lesson.title
-                , onPress = Just (ChangePage <| TypingStatisticPage past)
+                , onPress = Just (ChangePage <| TypingStatistic.init past)
                 }
 
         viewHover =
@@ -96,6 +97,7 @@ viewPointsGraph t hovering dictations =
                  , CE.onMouseUp
                     (List.concatMap (CI.getData >> Tuple.second)
                         >> median
+                        >> Maybe.map (\p -> { past = p, allPoints = Nothing })
                         >> Maybe.map (ChangePage << TypingStatisticPage)
                         >> Maybe.withDefault NoOpFrontendMsg
                     )

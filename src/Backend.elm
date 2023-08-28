@@ -1,6 +1,6 @@
 module Backend exposing (..)
 
-import Common exposing (defaultSettings)
+import Common exposing (defaultSettings, points)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
 import Sha256 exposing (sha256)
@@ -215,6 +215,18 @@ updateFromFrontend sessionId clientId msg model =
                     List.length <| allUsers <| model
             in
             ( model, Lamdera.sendToFrontend clientId <| UpdateUserCount count )
+
+        GetAllPoints lesson ->
+            let
+                allPoints : List Int
+                allPoints =
+                    model
+                        |> allUsers
+                        |> List.concatMap .pastDictations
+                        |> List.filter (\p -> p.lesson == lesson)
+                        |> List.map points
+            in
+            ( model, Lamdera.sendToFrontend clientId <| UpdateAllPoints allPoints )
 
 
 allUsers : { a | passiveUsers : Dict Username User, activeSessions : Dict SessionId Session } -> List User

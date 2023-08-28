@@ -3,6 +3,7 @@ module Types exposing (..)
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Dict exposing (Dict)
+import Evergreen.V1.Types exposing (Page(..))
 import Lamdera exposing (SessionId)
 import Time exposing (Posix)
 import Url exposing (Url)
@@ -41,6 +42,10 @@ type alias TypingModel =
     , paused : Bool
     , showKeyboard : Bool
     }
+
+
+type alias TypingStatisticModel =
+    { past : PastDictation, allPoints : Maybe (List Int) }
 
 
 type alias TypeError =
@@ -169,6 +174,7 @@ type ToBackend
     | ConsStatistic PastDictation
     | GetStatistic
     | GetUserCount
+    | GetAllPoints Lesson
 
 
 type ToFrontend
@@ -179,6 +185,7 @@ type ToFrontend
     | LoginFailed
     | UpdateStatistic (List PastDictation)
     | UpdateUserCount Int
+    | UpdateAllPoints (List Int)
 
 
 
@@ -188,7 +195,7 @@ type ToFrontend
 type Page
     = MenuPage Menu
     | TypingPage TypingModel
-    | TypingStatisticPage PastDictation
+    | TypingStatisticPage TypingStatisticModel
     | SettingsPage { layer : Int }
     | StatisticPage Hover
     | AuthPage AuthModel

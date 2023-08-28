@@ -7,7 +7,6 @@ import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
-import Element.Lazy
 import Html
 import Html.Attributes
 import Lamdera
@@ -17,7 +16,7 @@ import Pages.Menu
 import Pages.Settings
 import Pages.Statistic
 import Pages.Typing
-import Pages.TypingStatistic
+import Pages.TypingStatistic as TypingStatistic
 import Types exposing (..)
 import Url
 
@@ -127,18 +126,26 @@ update frontendMsg model =
                 past : PastDictation
                 past =
                     { errors = errors, lesson = lesson, duration = duration, finished = time }
+
+                newModel =
+                    { model | statistic = past :: model.statistic }
+
+                ( model2, cmd ) =
+                    update (ChangePage <| TypingStatistic.init past) newModel
             in
-            ( { model | page = TypingStatisticPage past, statistic = past :: model.statistic }
-            , Lamdera.sendToBackend <| ConsStatistic past
-            )
+            ( model2, Cmd.batch [ Lamdera.sendToBackend <| ConsStatistic past, cmd ] )
 
         ChangePage page ->
             ( { model | page = page }
-            , if page == InfoPage then
-                Lamdera.sendToBackend GetUserCount
+            , case page of
+                InfoPage ->
+                    Lamdera.sendToBackend GetUserCount
 
-              else
-                Cmd.none
+                TypingStatisticPage { past } ->
+                    Lamdera.sendToBackend <| GetAllPoints past.lesson
+
+                _ ->
+                    Cmd.none
             )
 
         PageMsg pageMsg ->
@@ -215,6 +222,18 @@ updateFromBackend msg model =
         UpdateUserCount count ->
             ( { model | usersCount = count }, Cmd.none )
 
+        UpdateAllPoints allPoints ->
+            case model.page of
+                TypingStatisticPage pageModel ->
+                    let
+                        newPage =
+                            { pageModel | allPoints = Just allPoints }
+                    in
+                    ( { model | page = TypingStatisticPage newPage }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 subscriptions : Model -> Sub FrontendMsg
 subscriptions model =
@@ -286,8 +305,8 @@ body model =
         TypingPage typing ->
             Pages.Typing.view t typing model.settings |> map (PageMsg << TypingMsg)
 
-        TypingStatisticPage past ->
-            Pages.TypingStatistic.view t past
+        TypingStatisticPage pageModel ->
+            TypingStatistic.view t pageModel
 
         SettingsPage page ->
             Pages.Settings.view t model.settings page
