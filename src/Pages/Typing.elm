@@ -25,7 +25,7 @@ init lesson =
     { dictation = bookToDictation lesson
     , madeError = False
     , errors = []
-    , layer = 1
+    , mods = Mods False False False
     , lesson = lesson
     , duration = 0
     , paused = True
@@ -65,28 +65,34 @@ update typingMsg settings model =
 
         KeyUp keyboardKey ->
             let
-                layer =
+                mods =
+                    model.mods
+
+                newMods =
                     case keyboardKey of
                         Control key ->
-                            case key of
+                            let
+                                mod =
+                                    controllToMod key
+                            in
+                            case mod of
                                 -- Shift
-                                "CapsLock" ->
-                                    1
+                                Just Shift ->
+                                    { mods | shift = False }
 
-                                "AltGraph" ->
-                                    1
+                                Just Mod3 ->
+                                    { mods | mod3 = False }
 
-                                -- ShiftLevel5
-                                "Unidentified" ->
-                                    1
+                                Just Mod4 ->
+                                    { mods | mod4 = False }
 
-                                _ ->
-                                    model.layer
+                                Nothing ->
+                                    mods
 
                         _ ->
-                            model.layer
+                            mods
             in
-            ( Just { model | layer = layer }, Cmd.none )
+            ( Just { model | mods = newMods }, Cmd.none )
 
         TickTypingTime ->
             ( Just { model | duration = model.duration + ticksPerSecond }, focusCommand )
@@ -123,21 +129,33 @@ updateDictation keyboardKey settings typing =
     in
     case decodedKey of
         Control key ->
-            case key of
-                "Shift" ->
-                    Just { typing | layer = 2 }
+            let
+                _ =
+                    Debug.log key
 
-                "AltGraph" ->
-                    Just { typing | layer = 3 }
+                mods =
+                    typing.mods
 
-                "ShiftLevel5" ->
-                    Just { typing | layer = 4 }
+                mod =
+                    controllToMod key
+            in
+            case mod of
+                Just Shift ->
+                    Just { typing | mods = { mods | shift = True } }
 
-                "Backspace" ->
-                    Just { typing | madeError = False }
+                Just Mod3 ->
+                    Just { typing | mods = { mods | mod3 = True } }
 
-                _ ->
-                    Just typing
+                Just Mod4 ->
+                    Just { typing | mods = { mods | mod4 = True } }
+
+                Nothing ->
+                    case key of
+                        "Backspace" ->
+                            Just { typing | madeError = False }
+
+                        _ ->
+                            Just typing
 
         Character char ->
             if typing.paused then
@@ -158,6 +176,30 @@ updateDictation keyboardKey settings typing =
                     |> Maybe.map (\dictation -> { typing | dictation = dictation, madeError = False })
 
 
+controllToMod code =
+    case code of
+        "ShiftLeft" ->
+            Just Shift
+
+        "ShiftRight" ->
+            Just Shift
+
+        "CapsLock" ->
+            Just Mod3
+
+        "Backslash" ->
+            Just Mod3
+
+        "IntlBackslash" ->
+            Just Mod4
+
+        "AltRight" ->
+            Just Mod4
+
+        _ ->
+            Nothing
+
+
 advanceDictation : Dictation -> Maybe Dictation
 advanceDictation dict =
     dict.next
@@ -176,7 +218,7 @@ advanceDictation dict =
 
 
 view : Theme -> TypingModel -> Settings -> Element TypingMsg
-view t { dictation, layer, madeError, paused, showKeyboard, duration } settings =
+view t { dictation, mods, madeError, paused, showKeyboard, duration } settings =
     let
         color =
             if madeError then
@@ -245,6 +287,26 @@ view t { dictation, layer, madeError, paused, showKeyboard, duration } settings 
 
         hiddenInput =
             el [ width (px 0), height (px 0), htmlAttribute <| Html.Attributes.style "overflow" "hidden" ] <| html <| Html.input [ Html.Attributes.id "hidden-input" ] []
+
+        layer =
+            case ( mods.shift, mods.mod3, mods.mod4 ) of
+                ( _, False, True ) ->
+                    4
+
+                ( True, False, False ) ->
+                    2
+
+                ( False, True, False ) ->
+                    3
+
+                ( True, True, False ) ->
+                    5
+
+                ( False, True, True ) ->
+                    6
+
+                _ ->
+                    1
     in
     column
         [ spacing 48
@@ -295,19 +357,22 @@ subscriptions model =
         ]
 
 
-keyDecoder : Decoder String
+keyDecoder : Decoder ( String, String )
 keyDecoder =
-    Decode.field "key" Decode.decoderString
+    Decode.map2
+        (\a b -> ( a, b ))
+        (Decode.field "key" Decode.decoderString)
+        (Decode.field "code" Decode.decoderString)
 
 
-toKey : String -> KeyboardKey
-toKey string =
-    case String.uncons string of
+toKey : ( String, String ) -> KeyboardKey
+toKey ( key, code ) =
+    case String.uncons key of
         Just ( char, "" ) ->
             Character char
 
         _ ->
-            Control string
+            Control code
 
 
 ticksPerSecond =

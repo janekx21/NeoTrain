@@ -37,12 +37,25 @@ type alias TypingModel =
     { dictation : Dictation
     , madeError : Bool
     , errors : List TypeError
-    , layer : Int
+    , mods : Mods
     , lesson : Lesson
     , duration : Float
     , paused : Bool
     , showKeyboard : Bool
     }
+
+
+type alias Mods =
+    { shift : Bool
+    , mod3 : Bool
+    , mod4 : Bool
+    }
+
+
+type Mod
+    = Shift
+    | Mod3
+    | Mod4
 
 
 type alias TypingStatisticModel =
