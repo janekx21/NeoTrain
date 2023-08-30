@@ -130,9 +130,6 @@ updateDictation keyboardKey settings typing =
     case decodedKey of
         Control key ->
             let
-                _ =
-                    Debug.log key
-
                 mods =
                     typing.mods
 
