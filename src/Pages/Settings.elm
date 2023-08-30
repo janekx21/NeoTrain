@@ -205,7 +205,7 @@ slider t min max value msg =
                         , Background.color <| black t
                         , Border.rounded t.rounding
 
-                        -- not working :<, mouseOver (mouseOverAttributes t)
+                        -- not working :< because the input must be over the thumb, mouseOver (mouseOverAttributes t)
                         ]
                 , step = Just 1
                 }

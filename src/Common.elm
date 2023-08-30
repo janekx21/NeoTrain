@@ -12,6 +12,7 @@ import Hex
 import Html.Attributes
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..), Icon)
+import Translation exposing (..)
 import Types exposing (..)
 
 
@@ -127,6 +128,10 @@ infoButton t msg =
     roundedButton t msg (materialIcon Icons.info) 'i'
 
 
+translateButton t msg =
+    roundedButton t msg (materialIcon Icons.translate) 't'
+
+
 statisticButton t =
     roundedButton t (ChangePage <| StatisticPage []) (materialIcon Icons.query_stats) 't'
 
@@ -173,8 +178,12 @@ mouseOverAttributes t =
 
 
 accessKey key =
+    let
+        label =
+            String.toUpper (String.fromChar key)
+    in
     [ htmlAttribute (Html.Attributes.accesskey key)
-    , tooltip <| "Shortcut: <Alt-" ++ String.toUpper (String.fromChar key) ++ ">"
+    , tooltip <| "Shortcut: <Alt-" ++ label ++ "> or <Shift-Alt-" ++ label ++ ">"
     ]
 
 
@@ -457,6 +466,7 @@ defaultSettings =
     , paddingRight = 20
     , layout = Neo
     , theme = { name = ElectricFields, dark = True, rounding = 10, borderWidth = 1 }
+    , language = German
     }
 
 

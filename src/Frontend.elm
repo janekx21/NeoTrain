@@ -17,6 +17,7 @@ import Pages.Settings
 import Pages.Statistic
 import Pages.Typing
 import Pages.TypingStatistic as TypingStatistic
+import Translation exposing (..)
 import Types exposing (..)
 import Url
 
@@ -149,7 +150,27 @@ update frontendMsg model =
             )
 
         PageMsg pageMsg ->
-            updatePage pageMsg model |> Tuple.mapFirst (\page -> { model | page = page })
+            case pageMsg of
+                AuthMsg ToggleTranslation ->
+                    let
+                        settings =
+                            model.settings
+
+                        toggleSettings =
+                            case settings.language of
+                                English ->
+                                    German
+
+                                German ->
+                                    English
+
+                        newSettings =
+                            { settings | language = toggleSettings }
+                    in
+                    ( { model | settings = newSettings }, Cmd.none )
+
+                _ ->
+                    updatePage pageMsg model |> Tuple.mapFirst (\page -> { model | page = page })
 
 
 updatePage : PageMsg -> Model -> ( Page, Cmd FrontendMsg )
@@ -206,7 +227,7 @@ updateFromBackend msg model =
         LoginFailed ->
             case model.page of
                 AuthPage page ->
-                    ( { model | page = AuthPage { page | failed = WrongUsernameOrPassword } }, Cmd.none )
+                    ( { model | page = AuthPage { page | failed = Types.WrongUsernameOrPassword } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -214,7 +235,7 @@ updateFromBackend msg model =
         RegisterFailed ->
             case model.page of
                 AuthPage page ->
-                    ( { model | page = AuthPage { page | failed = UsernameOrPasswordInvalid } }, Cmd.none )
+                    ( { model | page = AuthPage { page | failed = Types.UsernameOrPasswordInvalid } }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -250,6 +271,9 @@ view model =
     let
         t =
             model.settings.theme
+
+        l =
+            model.settings.language
     in
     { title = pageTitle model.page ++ " - " ++ "Neo Train"
     , body =
@@ -264,8 +288,8 @@ view model =
                        , centerY
                        , Border.rounded (t.rounding * 2)
                        , padding appPadding
-                       , authorisedMessage model.authorised
-                       , previewLabel
+                       , authorisedMessage l model.authorised
+                       , previewLabel l
                        ]
                 )
             <|
@@ -274,8 +298,8 @@ view model =
     }
 
 
-authorisedMessage : Bool -> Attribute msg
-authorisedMessage authorized =
+authorisedMessage : Language -> Bool -> Attribute msg
+authorisedMessage l authorized =
     if authorized then
         inFront <| none
 
@@ -286,10 +310,11 @@ authorisedMessage authorized =
                 , alignLeft
                 , moveDown 32
                 , alpha 0.2
-                , tooltip "You are not logged in and you progress will be lost"
+                , tooltip <| translate ProgressWillGetLost l
                 ]
             <|
-                text "not logged in"
+                text <|
+                    translate Translation.NotLoggedIn l
 
 
 body : Model -> Element FrontendMsg
@@ -297,6 +322,9 @@ body model =
     let
         t =
             model.settings.theme
+
+        l =
+            model.settings.language
     in
     case model.page of
         MenuPage menu ->
@@ -315,24 +343,25 @@ body model =
             Pages.Statistic.view t hover model.statistic
 
         AuthPage page ->
-            Pages.Auth.view t page |> map (PageMsg << AuthMsg)
+            Pages.Auth.view l t page |> map (PageMsg << AuthMsg)
 
         InfoPage ->
             Pages.Info.view model.usersCount t
 
 
-previewLabel : Attribute msg
-previewLabel =
+previewLabel : Language -> Attribute msg
+previewLabel l =
     inFront <|
         el
             [ alignBottom
             , alignRight
             , moveDown 32
             , alpha 0.2
-            , tooltip "your progress or account could get lost in an update"
+            , tooltip <| translate ProgressCouldGetLost l
             ]
         <|
-            text "preview"
+            text <|
+                translate Preview l
 
 
 ptMonoLink : Html.Html msg
@@ -371,6 +400,10 @@ styleTag t =
 :not(.s.sby) > *:hover[role=button], a:hover {
     z-index: 1;
     scale: 1.1;
+}
+
+input[type="range"]:hover ~ div > div > div > div:nth-child(2) {
+    scale: 1.4;
 }
 /*animation-name: opacityOn;
 animation-duration: 50ms;

@@ -47,7 +47,7 @@ view t { past, allPoints } =
                 allPoints
     in
     row
-        [ spacing 16
+        [ spacing 42
         , topLeftBar [ backButton t Back ]
         , bottomCenterBar [ roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (materialIcon Icons.refresh) 'r' ]
         , paddingEach { top = 0, left = 0, right = 0, bottom = 16 } -- extra bottom space for button

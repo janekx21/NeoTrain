@@ -6,6 +6,7 @@ import Dict exposing (Dict)
 import Evergreen.V1.Types exposing (Page(..))
 import Lamdera exposing (SessionId)
 import Time exposing (Posix)
+import Translation exposing (Language)
 import Url exposing (Url)
 
 
@@ -105,6 +106,7 @@ type alias Settings =
     , paddingRight : Int
     , layout : Layout
     , theme : Theme
+    , language : Language
     }
 
 
@@ -149,6 +151,7 @@ type AuthMsg
     | TryRegister String String
     | ToInfo
     | WithoutLogin
+    | ToggleTranslation
 
 
 type SettingsMsg
