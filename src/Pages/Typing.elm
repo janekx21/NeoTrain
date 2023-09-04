@@ -30,6 +30,8 @@ init lesson =
     , duration = 0
     , paused = True
     , showKeyboard = True
+    , textOffset = 0
+    , textSpeed = 0
     }
 
 
@@ -110,6 +112,19 @@ update typingMsg settings model =
             --change page
             ( Nothing, Cmd.none )
 
+        AnimationFrameDelta delta ->
+            let
+                speed =
+                    model.textSpeed
+
+                distance =
+                    model.textOffset
+
+                nextSpeed =
+                    speed + (distance * 0.02 - speed)
+            in
+            ( Just { model | textOffset = max (model.textOffset - (delta / 10) * speed) 0, textSpeed = nextSpeed }, Cmd.none )
+
 
 updateDictation : KeyboardKey -> Settings -> TypingModel -> Maybe TypingModel
 updateDictation keyboardKey settings typing =
@@ -170,7 +185,14 @@ updateDictation keyboardKey settings typing =
             else
                 typing.dictation
                     |> advanceDictation
-                    |> Maybe.map (\dictation -> { typing | dictation = dictation, madeError = False })
+                    |> Maybe.map
+                        (\dictation ->
+                            { typing
+                                | dictation = dictation
+                                , madeError = False
+                                , textOffset = typing.textOffset + 19.2
+                            }
+                        )
 
 
 controllToMod code =
@@ -215,7 +237,7 @@ advanceDictation dict =
 
 
 view : Theme -> TypingModel -> Settings -> Element TypingMsg
-view t { dictation, mods, madeError, paused, showKeyboard, duration } settings =
+view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset } settings =
     let
         color =
             if madeError then
@@ -237,7 +259,7 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration } settings =
                 |> String.toList
 
         typewriter =
-            row [ monospace, Font.size 32 ]
+            row [ monospace, Font.size 32, moveRight textOffset ]
                 [ row [] (List.map viewChar prev)
                 , el [ Background.color <| color t, Font.color <| wheat t ] <| viewChar dictation.current
                 , row [ Font.color <| secondary t ] (List.map viewChar next)
@@ -322,11 +344,12 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration } settings =
             ]
         , inFront hiddenInput
         ]
-        [ if paused then
-            pausedEl
+        [ el [ paddingXY 128 8 ] <|
+            if paused then
+                pausedEl
 
-          else
-            typewriter
+            else
+                typewriter
         , if showKeyboard then
             --image [ width fill ] { src = layerUrl settings.layout layer, description = "" }
             sizedImage 535 183 [ width fill ] { src = layerUrl settings.layout layer, description = "" }
@@ -351,6 +374,7 @@ subscriptions model =
 
           else
             Time.every (ticksPerSecond * 1000) (\_ -> TickTypingTime)
+        , Browser.Events.onAnimationFrameDelta AnimationFrameDelta
         ]
 
 

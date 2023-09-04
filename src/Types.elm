@@ -42,6 +42,8 @@ type alias TypingModel =
     , duration : Float
     , paused : Bool
     , showKeyboard : Bool
+    , textOffset : Float
+    , textSpeed : Float
     }
 
 
@@ -150,6 +152,7 @@ type TypingMsg
     = KeyDown KeyboardKey
     | KeyUp KeyboardKey
     | TickTypingTime
+    | AnimationFrameDelta Float
     | Pause
     | Play
     | ToggleKeyboard
