@@ -52,7 +52,7 @@ view t { past, allPoints } =
         , bottomCenterBar [ roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (materialIcon Icons.refresh) 'r' ]
         , paddingEach { top = 0, left = 0, right = 0, bottom = 16 } -- extra bottom space for button
         ]
-        [ column [ spacing 48 ]
+        [ column [ spacing 48, width fill ]
             [ title "Deine Tippstatistik"
             , column [ spacing 8 ]
                 [ subTitle "Zeit"
@@ -93,7 +93,7 @@ view t { past, allPoints } =
                     el [ width (px 300), padding 32, tooltip "weltweite Online Statistik" ] <| pointChart t allP <| points past
 
                 Nothing ->
-                    text "keine online Statistik"
+                    el [ width (px 300), height (px 300), alpha 0.5 ] <| el [ centerX, centerY ] <| text "keine online Statistik"
             ]
         ]
 
