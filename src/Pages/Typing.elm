@@ -136,6 +136,9 @@ updateDictation keyboardKey settings typing =
                         "Enter" ->
                             Character '\n'
 
+                        "Tab" ->
+                            Character '\t'
+
                         _ ->
                             Control key
 

@@ -26,7 +26,12 @@ points past =
         err =
             toFloat (List.length past.errors) / toFloat (String.length past.lesson.content)
     in
-    max 0 <| round <| ((charsPerMinute past.lesson past.duration / 5) - (err * 5)) * 10
+    max 0 <| round <| ((charsPerMinute past.lesson past.duration / 5) - (err * 110)) * 10
+
+
+errorRate : PastDictation -> Float
+errorRate { errors, lesson } =
+    toFloat (List.length errors) / toFloat (String.length lesson.content)
 
 
 charsPerMinute book duration =
@@ -70,8 +75,13 @@ viewChar char =
 
         '\n' ->
             el charSize <|
-                el [ alignBottom, centerX ] <|
+                el [ centerX, centerY ] <|
                     materialIcon Icons.keyboard_return
+
+        '\t' ->
+            el charSize <|
+                el [ centerX, centerY ] <|
+                    materialIcon Icons.keyboard_tab
 
         _ ->
             text <|
@@ -373,14 +383,64 @@ lessons =
     in
     wordLessons
         ++ [ Lesson Nothing "Ein Satz" "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
-           , Lesson Nothing "Spezial Zeichen" ":: -- \\\\ // !?!?!? ?! !? ^ ?! ^ ?!!??! ++ -- ++ -- +- -+ ; () () {} [] [] () {} \\\\ // ___ ||| $$ ## <> <> == && <= >= '' '' \"\" \"\" ~~ %% ``` ``` *** (+~}/$|\\#/$|[%)+?$=) ^|](>=\\/{[(`]?-(\\{/(-> =_><!^/`~&_[<_=&[>] ^<;'\"#\"$%+|~`+?)(/{*"
+           , Lesson Nothing "Weltrekord" "Wusstest du, dass der längste Slackline-Weg über 1 Kilometer gespannt war? Ein unglaublicher Weltrekord, der Balance und Mut erforderte!"
+           , Lesson Nothing "Javascript Zeichen" "; {} () [] , . = += - -= * *= / /= % == === != !== > < >= <= && || ! ++ -- ? : \\ '' \"\" // /* */"
+           , Lesson Nothing "Musik" "In der Welt der Musik gibt es unendliche Möglichkeiten zur kreativen Entfaltung. Klaviere und Violinen, Trommeln und Flöten fügen sich zu harmonischen Melodien. Töne werden zu Emotionen, und Musiker teilen ihre Leidenschaft mit der Welt. Die Musik verbindet uns und lässt unsere Herzen im Takt schlagen."
+           , Lesson Nothing "Netflix" "Wusstest du, dass Netflix an einem Tag über 1 Milliarde Stunden Streaming-Inhalte liefert? Das entspricht 115.000 Jahren Nonstop-Filme und Serien! Außerdem begann Netflix ursprünglich als DVD-Verleihdienst. Heute hat es mehr als 200 Millionen Abonnenten weltweit. Beeindruckend, oder?"
+           , Lesson Nothing "Techno" "Techno-Musik, auch als elektronische Tanzmusik bekannt, wurde in den späten 1980er Jahren in Detroit und Berlin geboren. Ein interessanter Fakt ist, dass der berühmte DJ Carl Cox 1 Million Pfund für seine linke Hand versichert hat, da sie seine Karriere definiert. Außerdem war die längste Techno-Party der Welt 30 Tage lang und fand 2018 in Berlin statt."
+           , Lesson Nothing "Symbols" "In der Mathematik sind griechische Symbole von großer Bedeutung. Zum Beispiel repräsentiert das griechische Alpha (α) oft Unbekanntes in Gleichungen. Das Summensymbol Σ zeigt eine Summe an, während das Integralzeichen ∫ den Flächeninhalt unter einer Kurve beschreibt. Vertrautheit mit diesen Symbolen ist für Mathematiker unerlässlich."
            , Lesson Nothing "Funktionale Programmierung" "Die funktionale Programmierung ist ein Programmierparadigma, bei dem Programme hauptsächlich aus Funktionen bestehen. Daten werden als unveränderbare Werte behandelt, und Funktionen haben keine Seiteneffekte. Dadurch ist die funktionale Programmierung gut geeignet für parallele und nebenläufige Systeme. Bekannte funktionale Programmiersprachen sind z.B. Haskell, Lisp und Clojure."
+           , Lesson Nothing "New York" "Ein Tauchgang in die faszinierende Unterwasserwelt vor New York City ist eine unvergessliche Erfahrung. Die Strömungen des Atlantiks offenbaren eine erstaunliche Vielfalt mariner Lebensformen, von farbenfrohen Korallenriffen bis zu majestätischen Mantarochen. Während Sie in die Tiefe gleiten, entdecken Sie versunkene Schiffswracks und antike Überreste. Die Meeresbewohner, darunter Barrakudas und Seepferdchen, begleiten Ihren Abstieg in diese geheimnisvolle Welt. Ein Tauchgang vor der Skyline von Manhattan ist ein wahrhaft magisches Erlebnis, das die Schönheit der Stadt von einer neuen Perspektive zeigt."
            , Lesson Nothing "Junge und Berg" "Es war einmal ein kleiner Junge, der in einem Dorf am Fuße eines großen Berges wohnte. Eines Tages beschloss er, den Berg zu besteigen, um zu sehen, was oben war. Er packte seinen Rucksack mit Proviant und Wasser und begann seine Reise. Der Aufstieg war beschwerlich, aber er gab nicht auf. Nach vielen Stunden erreichte er die Spitze des Berges und was er sah, übertraf seine kühnsten Träume. Er sah unendliche Wälder, kristallklare Flüsse und Täler voller wilder Blumen. Er beschloss, dass er immer wieder hierher zurückkehren würde, um die Schönheit dieses Ortes zu genießen."
            , Lesson Nothing "Klimawandel Debatte" "Die Debatte um den Klimawandel hat in den letzten Jahren stark zugenommen. Experten sind sich einig, dass der Ausstoß von Treibhausgasen und die Abholzung von Wäldern die Erderwärmung beschleunigen. Regierungen auf der ganzen Welt haben sich verpflichtet, Maßnahmen zu ergreifen, um diesem Problem entgegenzuwirken. Ein wichtiger Schritt ist die Förderung erneuerbarer Energien und die Verringerung des CO2-Ausstoßes. Auch die Wiederaufforstung von Wäldern und die Schaffung von Schutzgebieten können dazu beitragen, den Klimawandel zu bekämpfen."
            , Lesson Nothing "Pauls Wanderung" "Das schöne Wetter lockte die Menschen nach draußen. Die Sonne strahlte am blauen Himmel und ein leichter Wind wehte durch die Bäume. Es war ein perfekter Tag, um die Natur zu genießen.\nIn einem kleinen Dorf, umgeben von grünen Wiesen und sanften Hügeln, lebte ein junger Mann namens Paul. Er war ein aufgeschlossener und neugieriger Mensch, der immer auf der Suche nach neuen Abenteuern war.\nEines Tages beschloss Paul, einen Ausflug in den nahegelegenen Wald zu machen. Er schnürte seine Wanderschuhe, packte seinen Rucksack und machte sich auf den Weg. Der Wald war ein wahrer Zauberwald, voller exotischer Pflanzen und geheimnisvoller Geräusche.\nPaul wanderte stundenlang durch den dichten Wald, genoss die Stille und die frische Luft. Plötzlich hörte er ein leises Rascheln hinter sich. Er drehte sich um und entdeckte eine Gruppe neugieriger Eichhörnchen, die ihm aus sicherer Entfernung zuschauten.\nFasziniert blieb Paul stehen und beobachtete die niedlichen Tiere. Sie spielten und sprangen von Ast zu Ast. Paul holte eine kleine Tüte mit Nüssen aus seinem Rucksack und streute sie vorsichtig auf den Boden. Die Eichhörnchen kamen neugierig näher und begannen, die Nüsse zu sammeln.\nPaul lächelte und fühlte sich glücklich, diese besondere Begegnung erleben zu dürfen. Er wusste, dass er diesen Moment nie vergessen würde. Mit einem zufriedenen Gefühl setzte er seinen Weg fort und erkundete weiter den Wald.\nDer Tag verging wie im Flug, und als die Sonne langsam unterging, machte sich Paul auf den Rückweg zum Dorf. Er fühlte sich erfüllt von den Eindrücken und Erlebnissen des Tages. Der Wald hatte ihm eine neue Perspektive auf die Schönheit der Natur geschenkt.\nAls Paul schließlich in sein Dorf zurückkehrte, war er müde, aber glücklich. Er hatte gelernt, wie wichtig es ist, die kleinen Dinge im Leben zu schätzen und sich Zeit für Abenteuer und Erkundungen zu nehmen."
            , Lesson Nothing "Unserer Erde" "Die Erde ist der dritte Planet in unserem Sonnensystem und der einzige bekannte Planet, auf dem Leben existiert. Mit einem Durchmesser von etwa 12.742 Kilometern und einer Oberfläche von rund 510 Millionen Quadratkilometern ist die Erde ein faszinierender Ort.\nUnser Planet ist größtenteils von Wasser bedeckt, etwa 71 Prozent der Oberfläche sind von Ozeanen umgeben. Es gibt sieben Kontinente, darunter Asien, Afrika, Nordamerika, Südamerika, Europa, Australien und die Antarktis.\nUnsere Atmosphäre, eine Schicht aus Gasen, umgibt die Erde und spielt eine entscheidende Rolle für das Leben auf unserem Planeten. Sie besteht hauptsächlich aus Stickstoff (etwa 78 Prozent) und Sauerstoff (etwa 21 Prozent).\nDie Erde ist auch der einzige bekannte Ort im Universum, der flüssiges Wasser in ausreichender Menge aufweist. Wasser ist von entscheidender Bedeutung für das Leben und spielt eine wichtige Rolle bei zahlreichen geologischen Prozessen auf der Erde.\nUnser Planet beherbergt eine beeindruckende Vielfalt an Lebensformen. Von winzigen Bakterien bis zu majestätischen Walen und riesigen Bäumen gibt es eine unglaubliche Artenvielfalt auf der Erde. Die Erhaltung der Biodiversität ist daher von großer Bedeutung, um das Gleichgewicht und die Gesundheit unseres Planeten zu bewahren.\nDie Erde ist auch von geologischer Bedeutung. Sie verfügt über Kontinente, die auf den ozeanischen Platten schwimmen. Diese Platten bewegen sich langsam im Laufe der Zeit, was zur Entstehung von Gebirgen, Erdbeben und Vulkanen führt.\nEs ist wichtig, dass wir unseren Planeten schützen und nachhaltige Praktiken entwickeln, um die Umwelt zu erhalten. Jeder von uns kann einen Beitrag leisten, sei es durch Recycling, Energieeinsparung oder den Schutz natürlicher Lebensräume."
            , Lesson Nothing "Das QWERTY Layout" "Das QWERTY-Tastaturlayout ist das gebräuchlichste Tastaturlayout für englischsprachige Länder und wird auch in vielen anderen Ländern verwendet. Die Geschichte dieses Layouts reicht bis in das 19. Jahrhundert zurück.\nDie erste Schreibmaschine wurde 1868 von Christopher Latham Sholes erfunden. Sholes war ein US-amerikanischer Erfinder und Journalist. Die frühen Schreibmaschinen hatten mechanische Tasten, die auf Hebeln montiert waren. Diese Hebel bewegten ein Metallstück, das mit einem Buchstaben oder einer Zeichenplatte verbunden war, um das entsprechende Zeichen auf das Papier zu drucken.\nAls die Schreibmaschine immer populärer wurde, traten jedoch Probleme auf. Die Hebel, die benachbarte Buchstaben wie \" E \" und \" R \" aktivierten, neigten dazu, sich beim schnellen Tippen zu verheddern. Dies führte zu häufigen Verstopfungen und Verzögerungen beim Schreiben.\nUm dieses Problem zu lösen, entwickelte Sholes das QWERTY-Layout. Der Name leitet sich von den ersten sechs Buchstaben in der oberen linken Ecke der Tastatur ab. Durch die Anordnung der Buchstaben auf diese Weise konnte Sholes die häufig verwendeten Buchstaben voneinander trennen und so die Verwicklungen der Hebel reduzieren.\nDas QWERTY-Layout wurde 1873 mit der Einführung der Remington No. 2-Schreibmaschine, einer der ersten kommerziell erfolgreichen Schreibmaschinen, weit verbreitet. Dieses Layout wurde schnell zur Norm und setzte sich als Standard in der Schreibmaschinenindustrie durch.\nObwohl das QWERTY-Layout heute noch verwendet wird, wird es oft kritisiert. Einige behaupten, dass es ineffizient sei und zu Ermüdung und Verletzungen führen könne, da die häufigsten Buchstaben nicht optimal platziert seien. Es wurden alternative Tastaturlayouts wie das Dvorak Simplified Keyboard entwickelt, um diese Probleme zu beheben. Dennoch bleibt das QWERTY-Layout aufgrund seiner weit verbreiteten Akzeptanz und seiner historischen Bedeutung weiterhin das dominierende Tastaturlayout."
+           , Lesson Nothing "Spezial Zeichen" ":: -- \\\\ // !?!?!? ?! !? ^ ?! ^ ?!!??! ++ -- ++ -- +- -+ ; () () {} [] [] () {} \\\\ // ___ ||| $$ ## <> <> == && <= >= '' '' \"\" \"\" ~~ %% ``` ``` *** (+~}/$|\\#/$|[%)+?$=) ^|](>=\\/{[(`]?-(\\{/(-> =_><!^/`~&_[<_=&[>] ^<;'\"#\"$%+|~`+?)(/{*"
+           , Lesson Nothing "Griechisches Alphabet" "ABΓΔEZHΘIKΛMNΞOΠPΣTYΦXΨΩ αβγδεζηθικλμvξoπρστυφχψω ΞζΘωΠΔυPαΨMΛoYXKσyφITεψOBηv ωYyπXBμθvδHΦPσIζρΞTψεAφKαΩλO"
+           , Lesson Nothing "Aussagenlogik" "p ¬p (p ∧ q) (p ∨ q) ¬(p ∧ q) (q ∧ ¬q) (¬(p ∧ q) ⇒ (q ∧ ¬q))"
            , Lesson Nothing "Elm Zeichen" elmText
+           , Lesson Nothing "Java Fragments" """// Basic Variable Assignment
+int age = 25;
+String name = "John";
+double salary = 50000.0;
+// Conditional Statements
+if (age >= 18) {
+\tSystem.out.println("You are an adult.");
+} else {
+\tSystem.out.println("You are a minor.");
+}
+// Loops
+for (int i = 1; i <= 10; i++) {
+\tSystem.out.print(i + " ");
+}
+// Function Definition
+public int add(int a, int b) {
+\treturn a + b;
+}
+// Arrays
+int[] numbers = {1, 2, 3, 4, 5};
+String[] fruits = {"apple", "banana", "cherry"};
+// Object-Oriented Programming
+class Person {
+\tString name;
+\tint age;
+
+\tvoid sayHello() {
+\tSystem.out.println("Hello, my name is " + name);
+\t}
+}
+// Creating an instance of the Person class
+Person person1 = new Person();
+person1.name = "Alice";
+person1.age = 30;
+person1.sayHello();
+// Exception Handling
+try {
+\tint result = 10 / 0;
+} catch (ArithmeticException e) {
+\tSystem.err.println("Error: Division by zero");
+}"""
            , Lesson Nothing "Debug Text" "foobar"
            ]
 

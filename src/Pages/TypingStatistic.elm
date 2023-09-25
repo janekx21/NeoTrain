@@ -63,7 +63,7 @@ view t { past, allPoints } =
             , column [ spacing 8 ]
                 [ subTitle "Fehlerrate"
                 , text <| "Anzahl: " ++ String.fromInt (List.length errors)
-                , text <| "Prozent: " ++ errorPercent lesson errors
+                , text <| "Prozent: " ++ errorPercent past
                 ]
             , column [ spacing 8 ]
                 [ subTitle "Fehler"
@@ -74,7 +74,7 @@ view t { past, allPoints } =
                     wrappedRow [ spacing 16, width (fill |> maximum 650) ] (grouped |> List.map (viewError t))
                 ]
             ]
-        , column [ spacing 8, width fill ]
+        , column [ spacing 8, width shrink ]
             [ el [ padding 8, centerX ] <|
                 el
                     (itemBorder t
@@ -156,10 +156,10 @@ viewError t ( char, typeErrors ) =
         ]
 
 
-errorPercent { content } errors =
+errorPercent past =
     let
         percent =
-            round ((toFloat (List.length errors) / toFloat (String.length content)) * 100)
+            round (errorRate past * 100)
     in
     String.fromInt percent ++ "%"
 

@@ -80,6 +80,7 @@ view t hovering statistic =
 viewPointsGraph : Theme -> Hover -> List PastDictation -> Element FrontendMsg
 viewPointsGraph t hovering dictations =
     let
+        items : List ( Int, Bucket )
         items =
             dictations
                 |> bucketStatistic
@@ -112,14 +113,14 @@ viewPointsGraph t hovering dictations =
                 )
                 [ C.yTicks [ CA.color (toHex <| black t) ]
                 , C.yLabels [ CA.color (toHex <| black t), CA.fontSize 16 ]
-                , C.grid [ CA.color (toHex <| secondary t) ]
+                , C.grid [ CA.color (toHex <| black t) ]
                 , C.series (Tuple.first >> toFloat)
-                    [ C.interpolated (Tuple.second >> medianPoints >> toFloat) [ CA.color <| toHex <| primary t, CA.width 4 ] [ CA.circle, CA.size 8 ]
+                    [ C.interpolated (Tuple.second >> medianPoints) [ CA.color <| toHex <| primary t, CA.width 4 ] [ CA.circle, CA.size 8 ]
                         |> C.variation
                             (\_ data ->
                                 let
-                                    createSet a =
-                                        a |> List.map .finished |> List.map Time.posixToMillis |> Set.fromList
+                                    createSet =
+                                        List.map .finished >> List.map Time.posixToMillis >> Set.fromList
                                 in
                                 if haveCommon (hovering |> createSet) (data |> Tuple.second |> createSet) then
                                     [ CA.circle, CA.size 48, CA.color (toHex <| primary t) ]
@@ -127,28 +128,51 @@ viewPointsGraph t hovering dictations =
                                 else
                                     []
                             )
+                        |> C.named "Punkte"
+                    , C.interpolated (Tuple.second >> medianErrorRate >> (\l -> l * 2000))
+                        [ CA.color <| toHex <| secondary t, CA.width 2, CA.dashed [ 2, 2 ] ]
+                        []
+                        |> C.named "Fehlerquote"
                     ]
                     items
+                , C.legendsAt .min
+                    .max
+                    [ CA.column
+                    , CA.moveRight 15
+                    , CA.spacing 5
+                    ]
+                    [ CA.width 20 ]
                 ]
 
 
-medianPoints : List PastDictation -> Int
+medianPoints : List PastDictation -> Float
 medianPoints pastDictations =
     pastDictations
         |> median
-        |> Maybe.map points
+        |> Maybe.map (points >> toFloat)
+        |> Maybe.withDefault 0
+
+
+medianErrorRate : List PastDictation -> Float
+medianErrorRate pastDictations =
+    pastDictations
+        |> median
+        |> Maybe.map errorRate
         |> Maybe.withDefault 0
 
 
 bucketStatistic : List PastDictation -> Dict Int Bucket
 bucketStatistic pastDictations =
     let
+        day =
+            1000 * 60 * 60 * 24
+
         insert : PastDictation -> Dict Int Bucket -> Dict Int Bucket
         insert pastDictation dict =
             let
                 posixToBucketKey : Posix -> Int
                 posixToBucketKey posix =
-                    Time.posixToMillis posix // (1000 * 60 * 10)
+                    Time.posixToMillis posix // day
 
                 key =
                     posixToBucketKey pastDictation.finished
