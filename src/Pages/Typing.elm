@@ -72,13 +72,8 @@ update typingMsg settings model =
 
                 newMods =
                     case keyboardKey of
-                        Control key ->
-                            let
-                                mod =
-                                    controllToMod key
-                            in
-                            case mod of
-                                -- Shift
+                        Control code ->
+                            case controllToMod code of
                                 Just Shift ->
                                     { mods | shift = False }
 
@@ -128,74 +123,87 @@ update typingMsg settings model =
 
 updateDictation : KeyboardKey -> Settings -> TypingModel -> Maybe TypingModel
 updateDictation keyboardKey settings typing =
-    let
-        decodedKey =
-            case keyboardKey of
-                Control key ->
-                    case key of
-                        "Enter" ->
-                            Character '\n'
+    typing.dictation
+        |> advanceDictation
+        |> Maybe.map
+            (\dictation ->
+                { typing
+                    | dictation = dictation
+                    , madeError = False
+                    , textOffset = typing.textOffset + 19.2
+                    , errors = typing.errors ++ [ { was = 'r', should = 'w' } ]
+                }
+            )
 
-                        "Tab" ->
-                            Character '\t'
 
-                        _ ->
-                            Control key
 
-                Character char ->
-                    Character char
-    in
-    case decodedKey of
-        Control key ->
-            let
-                mods =
-                    typing.mods
+{-
+   let
+       decodedKey =
+           case keyboardKey of
+               Control key ->
+                   case key of
+                       "Enter" ->
+                           Character '\n'
 
-                mod =
-                    controllToMod key
-            in
-            case mod of
-                Just Shift ->
-                    Just { typing | mods = { mods | shift = True } }
+                       "Tab" ->
+                           Character '\t'
 
-                Just Mod3 ->
-                    Just { typing | mods = { mods | mod3 = True } }
+                       _ ->
+                           Control key
 
-                Just Mod4 ->
-                    Just { typing | mods = { mods | mod4 = True } }
+               Character char ->
+                   Character char
+   in
+   case decodedKey of
+       Control code ->
+           let
+               mods =
+                   typing.mods
+           in
+           case controllToMod code of
+               Just Shift ->
+                   Just { typing | mods = { mods | shift = True } }
 
-                Nothing ->
-                    case key of
-                        "Backspace" ->
-                            Just { typing | madeError = False }
+               Just Mod3 ->
+                   Just { typing | mods = { mods | mod3 = True } }
 
-                        _ ->
-                            Just typing
+               Just Mod4 ->
+                   Just { typing | mods = { mods | mod4 = True } }
 
-        Character char ->
-            if typing.paused then
-                Just { typing | paused = False }
+               Nothing ->
+                   case code of
+                       "Backspace" ->
+                           Just { typing | madeError = False }
 
-            else if settings.blockOnError == OneBackspace && typing.madeError then
-                Just typing
+                       _ ->
+                           Just typing
 
-            else if char /= typing.dictation.current && typing.madeError then
-                Just typing
+       Character char ->
+           if typing.paused then
+               Just { typing | paused = False }
 
-            else if char /= typing.dictation.current then
-                Just { typing | madeError = True, errors = typing.errors ++ [ { was = char, should = typing.dictation.current } ] }
+           else if settings.blockOnError == OneBackspace && typing.madeError then
+               Just typing
 
-            else
-                typing.dictation
-                    |> advanceDictation
-                    |> Maybe.map
-                        (\dictation ->
-                            { typing
-                                | dictation = dictation
-                                , madeError = False
-                                , textOffset = typing.textOffset + 19.2
-                            }
-                        )
+           else if char /= typing.dictation.current && typing.madeError then
+               Just typing
+
+           else if char /= typing.dictation.current then
+               Just { typing | madeError = True, errors = typing.errors ++ [ { was = char, should = typing.dictation.current } ] }
+
+           else
+               typing.dictation
+                   |> advanceDictation
+                   |> Maybe.map
+                       (\dictation ->
+                           { typing
+                               | dictation = dictation
+                               , madeError = False
+                               , textOffset = typing.textOffset + 19.2
+                           }
+                       )
+-}
 
 
 controllToMod code =
