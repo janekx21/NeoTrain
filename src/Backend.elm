@@ -39,7 +39,7 @@ month =
 
 init : ( Model, Cmd BackendMsg )
 init =
-    ( { currentSaltIndex = 0, activeSessions = Dict.empty, passiveUsers = Dict.empty, currentTime = Time.millisToPosix 0 }
+    ( { currentSaltIndex = 0, sessions = Dict.empty, users = Dict.empty, currentTime = Time.millisToPosix 0 }
     , Time.now |> Task.perform TimeTick
     )
 
@@ -50,16 +50,12 @@ update msg model =
         TimeTick time ->
             let
                 expiredSessions =
-                    model.activeSessions
+                    model.sessions
                         |> Dict.filter
                             (\_ { created } -> Time.posixToMillis created + month < Time.posixToMillis time)
-
-                expiredUsers =
-                    expiredSessions |> Dict.values |> List.map (\{ user } -> ( user.username, user )) |> Dict.fromList
             in
             ( { model
-                | activeSessions = Dict.diff model.activeSessions expiredSessions
-                , passiveUsers = Dict.union model.passiveUsers expiredUsers
+                | sessions = Dict.diff model.sessions expiredSessions
                 , currentTime = time
               }
             , Cmd.none
@@ -70,26 +66,33 @@ updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd
 updateFromFrontend sessionId clientId msg model =
     let
         maybeSession =
-            Dict.get sessionId model.activeSessions
+            Dict.get sessionId model.sessions
+
+        maybeUser =
+            maybeSession
+                |> Maybe.map .username
+                |> Maybe.andThen (\username -> Dict.get username model.users)
 
         throwOut =
             Lamdera.sendToFrontend clientId KickOut
     in
     case msg of
         UpdateSettings settings ->
-            let
-                updateUser user =
-                    { user | settings = settings }
+            case maybeUser of
+                Nothing ->
+                    ( model, throwOut )
 
-                updateSession session =
-                    { session | user = updateUser session.user }
-            in
-            ( { model | activeSessions = Dict.update sessionId (Maybe.map updateSession) model.activeSessions }, Cmd.none )
+                Just { username } ->
+                    let
+                        updateUser user =
+                            { user | settings = settings }
+                    in
+                    ( { model | users = Dict.update username (Maybe.map updateUser) model.users }, Cmd.none )
 
         GetSettings ->
-            case maybeSession of
-                Just session ->
-                    ( model, Lamdera.sendToFrontend clientId <| GotSettings session.user.settings )
+            case maybeUser of
+                Just user ->
+                    ( model, Lamdera.sendToFrontend clientId <| GotSettings user.settings )
 
                 Nothing ->
                     ( model, throwOut )
@@ -109,8 +112,8 @@ updateFromFrontend sessionId clientId msg model =
 
                 validPassword =
                     -- https://www.ibm.com/docs/en/baw/19.x?topic=security-characters-that-are-valid-user-ids-passwords
-                    String.all (\c -> Char.isAlphaNum c || List.member c (String.toList "!()-.?[]_`~;:@#$%^&*+=")) password
-                        && (pwLength >= 10)
+                    String.all (\c -> Char.isAlphaNum c || List.member c (String.toList "!()-.?[]_`~;:@#$%^&*+= ")) password
+                        && (pwLength >= 8)
                         && (pwLength <= 64)
 
                 salt =
@@ -135,10 +138,14 @@ updateFromFrontend sessionId clientId msg model =
                     List.member username allUsernames
 
                 session =
-                    { user = user, created = model.currentTime }
+                    { username = username, created = model.currentTime }
             in
             if validUsername && validPassword && not usernameTaken then
-                ( { model | activeSessions = Dict.insert sessionId session model.activeSessions, currentSaltIndex = model.currentSaltIndex + 1 }
+                ( { model
+                    | sessions = Dict.insert sessionId session model.sessions
+                    , currentSaltIndex = model.currentSaltIndex + 1
+                    , users = Dict.insert username user model.users
+                  }
                 , Lamdera.sendToFrontend clientId LoginSuccessful
                 )
 
@@ -146,7 +153,7 @@ updateFromFrontend sessionId clientId msg model =
                 ( model, Lamdera.sendToFrontend clientId RegisterFailed )
 
         InsertSession username password ->
-            case Dict.get username model.passiveUsers of
+            case Dict.get username model.users of
                 Just user ->
                     let
                         hash =
@@ -155,15 +162,12 @@ updateFromFrontend sessionId clientId msg model =
                     if hash == user.passwordHash then
                         let
                             session =
-                                { user = user, created = model.currentTime }
+                                { username = username, created = model.currentTime }
 
-                            passiveUsers =
-                                Dict.remove username model.passiveUsers
-
-                            activeSessions =
-                                Dict.insert sessionId session model.activeSessions
+                            sessions =
+                                Dict.insert sessionId session model.sessions
                         in
-                        ( { model | passiveUsers = passiveUsers, activeSessions = activeSessions }, Lamdera.sendToFrontend clientId LoginSuccessful )
+                        ( { model | sessions = sessions }, Lamdera.sendToFrontend clientId LoginSuccessful )
 
                     else
                         ( model, Lamdera.sendToFrontend clientId LoginFailed )
@@ -180,10 +184,9 @@ updateFromFrontend sessionId clientId msg model =
 
         RemoveSession ->
             case maybeSession of
-                Just session ->
+                Just _ ->
                     ( { model
-                        | activeSessions = Dict.remove sessionId model.activeSessions
-                        , passiveUsers = Dict.insert session.user.username session.user model.passiveUsers
+                        | sessions = Dict.remove sessionId model.sessions
                       }
                     , throwOut
                     )
@@ -192,19 +195,21 @@ updateFromFrontend sessionId clientId msg model =
                     ( model, throwOut )
 
         ConsStatistic pastDictation ->
-            let
-                updateUser user =
-                    { user | pastDictations = pastDictation :: user.pastDictations }
+            case maybeSession of
+                Just { username } ->
+                    let
+                        updateUser user =
+                            { user | pastDictations = pastDictation :: user.pastDictations }
+                    in
+                    ( { model | users = Dict.update username (Maybe.map updateUser) model.users }, Cmd.none )
 
-                updateSession session =
-                    { session | user = updateUser session.user }
-            in
-            ( { model | activeSessions = Dict.update sessionId (Maybe.map updateSession) model.activeSessions }, Cmd.none )
+                Nothing ->
+                    ( model, throwOut )
 
         GetStatistic ->
-            case maybeSession of
-                Just session ->
-                    ( model, Lamdera.sendToFrontend clientId <| UpdateStatistic session.user.pastDictations )
+            case maybeUser of
+                Just user ->
+                    ( model, Lamdera.sendToFrontend clientId <| UpdateStatistic user.pastDictations )
 
                 Nothing ->
                     ( model, throwOut )
@@ -229,9 +234,9 @@ updateFromFrontend sessionId clientId msg model =
             ( model, Lamdera.sendToFrontend clientId <| UpdateAllPoints allPoints )
 
 
-allUsers : { a | passiveUsers : Dict Username User, activeSessions : Dict SessionId Session } -> List User
-allUsers { passiveUsers, activeSessions } =
-    Dict.values passiveUsers ++ List.map .user (Dict.values activeSessions)
+allUsers : { a | users : Dict Username User } -> List User
+allUsers { users } =
+    Dict.values users
 
 
 

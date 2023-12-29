@@ -54,7 +54,7 @@ translate key lang =
                     "Falscher Username oder falsches Password!"
 
                 UsernameOrPasswordInvalid ->
-                    "Username muss [A-z] Länge min. 3. Password muss IBM valide und Länge min. 10"
+                    "Username muss [A-z 0-9] Länge min. 3. Password muss IBM valide und Länge min. 8"
 
                 ProgressCouldGetLost ->
                     "Fortschritt könnte währent eines Updates verlohren gehen"
@@ -92,7 +92,7 @@ translate key lang =
                     "Wrong username or password!"
 
                 UsernameOrPasswordInvalid ->
-                    "Username must be [A-z] with min length 3. Password must be IBM valid with min length 10"
+                    "Username must be [A-z 0-9] with min length 3. Password must be IBM valid with min length 8"
 
                 ProgressCouldGetLost ->
                     "your progress or account could get lost in an update"

@@ -91,14 +91,14 @@ type alias Bucket =
 
 type alias BackendModel =
     { currentSaltIndex : Int
-    , passiveUsers : Dict Username User
-    , activeSessions : Dict SessionId Session
+    , users : Dict Username User
+    , sessions : Dict SessionId Session
     , currentTime : Posix
     }
 
 
 type alias Session =
-    { user : User, created : Posix }
+    { username : String, created : Posix }
 
 
 type alias User =
