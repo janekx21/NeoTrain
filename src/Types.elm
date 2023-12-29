@@ -20,7 +20,7 @@ type alias FrontendModel =
     , settings : Settings
     , statistic : List PastDictation
     , authorised : Bool
-    , usersCount : Int
+    , appStatistic : AppStatistic
     }
 
 
@@ -125,6 +125,12 @@ type alias Settings =
     }
 
 
+type alias AppStatistic =
+    { userCount : Int
+    , pastDictationCount : Int
+    }
+
+
 
 -- Messages
 
@@ -192,7 +198,7 @@ type ToBackend
     | RemoveSession
     | ConsStatistic PastDictation
     | GetStatistic
-    | GetUserCount
+    | GetAppStatistic
     | GetAllPoints Lesson
 
 
@@ -203,7 +209,7 @@ type ToFrontend
     | LoginSuccessful
     | LoginFailed
     | UpdateStatistic (List PastDictation)
-    | UpdateUserCount Int
+    | UpdateAppStatistic AppStatistic
     | UpdateAllPoints (List Int)
 
 

@@ -50,9 +50,12 @@ init url key =
       , settings = defaultSettings
       , statistic = []
       , authorised = False
-      , usersCount = 1 --min one
+      , appStatistic =
+            { userCount = 1 --min one
+            , pastDictationCount = 0
+            }
       }
-    , Cmd.batch [ Lamdera.sendToBackend GetSession, Lamdera.sendToBackend GetUserCount ]
+    , Cmd.batch [ Lamdera.sendToBackend GetSession, Lamdera.sendToBackend GetAppStatistic ]
     )
 
 
@@ -140,7 +143,7 @@ update frontendMsg model =
             ( { model | page = page }
             , case page of
                 InfoPage ->
-                    Lamdera.sendToBackend GetUserCount
+                    Lamdera.sendToBackend GetAppStatistic
 
                 TypingStatisticPage { past } ->
                     Lamdera.sendToBackend <| GetAllPoints past.lesson
@@ -240,8 +243,8 @@ updateFromBackend msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        UpdateUserCount count ->
-            ( { model | usersCount = count }, Cmd.none )
+        UpdateAppStatistic statistic ->
+            ( { model | appStatistic = statistic }, Cmd.none )
 
         UpdateAllPoints allPoints ->
             case model.page of
@@ -346,7 +349,7 @@ body model =
             Pages.Auth.view l t page |> map (PageMsg << AuthMsg)
 
         InfoPage ->
-            Pages.Info.view model.usersCount t
+            Pages.Info.view model.appStatistic t
 
 
 previewLabel : Language -> Attribute msg

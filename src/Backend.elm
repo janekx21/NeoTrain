@@ -214,12 +214,24 @@ updateFromFrontend sessionId clientId msg model =
                 Nothing ->
                     ( model, throwOut )
 
-        GetUserCount ->
+        GetAppStatistic ->
             let
-                count =
+                userCount =
                     List.length <| allUsers <| model
+
+                pastDictationCount =
+                    model
+                        |> allUsers
+                        |> List.concatMap .pastDictations
+                        |> List.length
+
+                statistic : AppStatistic
+                statistic =
+                    { userCount = userCount
+                    , pastDictationCount = pastDictationCount
+                    }
             in
-            ( model, Lamdera.sendToFrontend clientId <| UpdateUserCount count )
+            ( model, Lamdera.sendToFrontend clientId <| UpdateAppStatistic statistic )
 
         GetAllPoints lesson ->
             let
