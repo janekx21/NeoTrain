@@ -17,13 +17,13 @@ import Set
 import Types exposing (..)
 
 
-init : PastDictation -> Page
-init past =
-    TypingStatisticPage { past = past, allPoints = Nothing }
+init : PastDictation -> Bool -> Page
+init past fromLesson =
+    TypingStatisticPage { past = past, allPoints = Nothing, fromLesson = fromLesson }
 
 
 view : Theme -> TypingStatisticModel -> Element FrontendMsg
-view t { past, allPoints } =
+view t { past, allPoints, fromLesson } =
     let
         { lesson, errors, duration } =
             past
@@ -38,7 +38,7 @@ view t { past, allPoints } =
         maybeAllPoints =
             Maybe.andThen
                 (\p ->
-                    if List.length p < 5 then
+                    if List.length p < 3 then
                         Nothing
 
                     else
@@ -88,12 +88,57 @@ view t { past, allPoints } =
                     text <|
                         (String.fromInt <| points past)
                             ++ " Punkte"
+            , if fromLesson then
+                let
+                    label =
+                        case points past // 100 of
+                            0 ->
+                                "Schade kaum Punkte :< Streng dich das nächste mal etwas mehr an ok? Hast du zu viele Fehler gemacht oder warst du zu langsam? Gleich nochmal!"
+
+                            1 ->
+                                "Ja es geht vorran. Du wirst langsam richtig schnell. Noch ein paar Übungen braucht es aber. Weiter so!"
+
+                            2 ->
+                                "Jetzt nehmen wir fahrt auf. Du kannst jetzt schon gut tippen. Wenn du weiter übst kannst du es sogar noch schneller als jetzt. Los Weiter!"
+
+                            3 ->
+                                "Das Tempo stimmt. Jetzt geht es um Elegranz und Korrektheit. Schau dir außerdem die Diktate an!"
+
+                            4 ->
+                                "Du bist geübt im tippen. Fortgeschritten, auf dem weg zum Profi. Kannst du das gleiche auch bei langen Diktaten? Weiter!"
+
+                            5 ->
+                                "So viele Punkte Juhu. Die Geschwindigkeit kann sich sehen lassen."
+
+                            6 ->
+                                "Du warst jetzt schon echt schnell. Noch ein paar Tippübungen und du bist ein Profi."
+
+                            7 ->
+                                "Du bist ein echter Profi im Tippen."
+
+                            8 ->
+                                "Du bist ein Profi. Ein sehr guter Profi sogar."
+
+                            9 ->
+                                "Du bist ein Profi mit hang zum extremen."
+
+                            10 ->
+                                "Du bist ein absolutes Tippass! (Höchste Auszeichnung)"
+
+                            _ ->
+                                "Wow einfach nur Wow"
+                in
+                paragraph []
+                    [ text label ]
+
+              else
+                none
             , case maybeAllPoints of
                 Just allP ->
-                    el [ width (px 300), padding 32, tooltip "weltweite Online Statistik" ] <| pointChart t allP <| points past
+                    el [ width (px 400), padding 32, tooltip "weltweite Online Statistik" ] <| pointChart t allP <| points past
 
                 Nothing ->
-                    el [ width (px 300), height (px 300), alpha 0.5 ] <| el [ centerX, centerY ] <| text "keine online Statistik"
+                    el [ width (px 400), height (px 300), alpha 0.5 ] <| el [ centerX, centerY ] <| text "keine online Statistik"
             ]
         ]
 
@@ -116,7 +161,7 @@ pointChart t points myPoints =
     html <|
         C.chart
             [ CA.height 300
-            , CA.width 300
+            , CA.width 400
             ]
             [ C.xLabels [ CA.withGrid, CA.color (toHex <| black t) ]
             , C.yLabels [ CA.color (toHex <| black t) ]

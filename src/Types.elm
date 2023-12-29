@@ -61,7 +61,7 @@ type Mod
 
 
 type alias TypingStatisticModel =
-    { past : PastDictation, allPoints : Maybe (List Int) }
+    { past : PastDictation, allPoints : Maybe (List Int), fromLesson : Bool }
 
 
 type alias TypeError =

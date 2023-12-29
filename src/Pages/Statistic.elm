@@ -36,7 +36,7 @@ view t hovering statistic =
                        )
                 )
                 { label = text <| (String.fromInt <| points past) ++ "\t" ++ past.lesson.title
-                , onPress = Just (ChangePage <| TypingStatistic.init past)
+                , onPress = Just (ChangePage <| TypingStatistic.init past False)
                 }
 
         viewHover =
@@ -98,8 +98,8 @@ viewPointsGraph t hovering dictations =
                  , CE.onMouseUp
                     (List.concatMap (CI.getData >> Tuple.second)
                         >> median
-                        >> Maybe.map (\p -> { past = p, allPoints = Nothing })
-                        >> Maybe.map (ChangePage << TypingStatisticPage)
+                        >> Maybe.map (\p -> TypingStatistic.init p False)
+                        >> Maybe.map ChangePage
                         >> Maybe.withDefault NoOpFrontendMsg
                     )
                     (CE.getNearest CI.dots)

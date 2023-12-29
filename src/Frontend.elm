@@ -132,7 +132,7 @@ update frontendMsg model =
                     { model | statistic = past :: model.statistic }
 
                 ( model2, cmd ) =
-                    update (ChangePage <| TypingStatistic.init past) newModel
+                    update (ChangePage <| TypingStatistic.init past True) newModel
             in
             ( model2, Cmd.batch [ Lamdera.sendToBackend <| ConsStatistic past, cmd ] )
 

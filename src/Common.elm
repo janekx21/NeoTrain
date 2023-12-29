@@ -379,11 +379,11 @@ lessons =
                 ++ String.repeat 2 "foo | bar | foobar | barfoo "
                 ++ String.repeat 2 "( { foo | bar = bar } ) "
 
-        toLesson : Layout -> ( String, String, List String ) -> Lesson
-        toLesson layout ( _, must, words ) =
-            Lesson (Just layout) (layoutNames layout ++ " " ++ must) (String.join " " words)
+        toLesson : Layout -> ( Int, String, List String ) -> Lesson
+        toLesson layout ( index, must, words ) =
+            Lesson (Just layout) (layoutNames layout ++ " " ++ must ++ " " ++ String.fromInt index) (String.join " " words)
 
-        toLessons : ( Layout, List ( String, String, List String ) ) -> List Lesson
+        toLessons : ( Layout, List ( Int, String, List String ) ) -> List Lesson
         toLessons ( layout, list ) =
             list |> List.map (toLesson layout)
 

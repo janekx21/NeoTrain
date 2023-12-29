@@ -7,6 +7,9 @@ class Name:
     def __repr__(self):
         return self.name
 
+def chunkify(lst,n):
+    return [lst[i::n] for i in range(n)]
+
 layouts = [ (Name("Neo"), ["uiaenrtd", "lchg", "fv", "qjwk", "os", "pbm", "xyz", "äöüß"])
           , (Name("NeoQwertz"), ["asdfjkl", "ruie", "qwop", "tz", "gh", "vn", "cm", "cb", "xyz", "äöüß"])
           , (Name("Bone"), ["ctienrsg", "ua", "hl", "dj", "mw", "qp", "ob", "fvk", "xyz", "öäüß"])
@@ -56,7 +59,11 @@ for name,layout in layouts:
         result = result[:100]
         random.shuffle(result)
 
-        tuples.append((''.join(chars), ''.join(must), result))
+        results = chunkify(result, 10)
+        for i,result in enumerate(results):
+            tuples.append((i, ''.join(must), result))
+
+        
     assert set(chars) == set([*"abcdefghijklmnopqrstuvwxyzßäöü"]), ("".join(sorted(chars)),name)
 
     layRes.append((name, tuples))
