@@ -25,8 +25,17 @@ points past =
     let
         err =
             toFloat (List.length past.errors) / toFloat (String.length past.lesson.content)
+
+        cpm =
+            charsPerMinute past.lesson past.duration
+
+        p1 =
+            (cpm * 0.2 - err * 110) * 10
+
+        logged =
+            logBase 2 p1 * 10 + p1
     in
-    max 0 <| round <| ((charsPerMinute past.lesson past.duration / 5) - (err * 110)) * 10
+    max 0 <| round <| logged
 
 
 errorRate : PastDictation -> Float
