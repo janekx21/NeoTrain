@@ -24,7 +24,7 @@ points : PastDictation -> Int
 points past =
     let
         err =
-            toFloat (List.length past.errors) / toFloat (String.length past.lesson.content)
+            errorRate past
 
         cpm =
             charsPerMinute past.lesson past.duration
@@ -388,10 +388,12 @@ lessons =
             list |> List.map (toLesson layout)
 
         wordLessons =
-            Generated.Layouts.data |> List.concatMap toLessons
+            Generated.Layouts.data |> List.concatMap toLessons |> List.filter (\l -> not <| String.isEmpty l.content)
     in
     wordLessons
-        ++ [ Lesson Nothing "Ein Satz" "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
+        ++ [ Lesson Nothing "Nummern und Wörter" "Zehn 10 und 5 ist 15. Dann noch eine Zwei 2 und eine 3 und 4 4ren oder waren es doch eher 80? Warum kann ich nicht einfach 20 oder 55 oder 89 nehmen? 70er und 80er und manchmal auch die 90er. 6"
+           , Lesson Nothing "Nummern" "1581023402052935065005866138134109387560173"
+           , Lesson Nothing "Ein Satz" "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
            , Lesson Nothing "Weltrekord" "Wusstest du, dass der längste Slackline-Weg über 1 Kilometer gespannt war? Ein unglaublicher Weltrekord, der Balance und Mut erforderte!"
            , Lesson Nothing "Javascript Zeichen" "; {} () [] , . = += - -= * *= / /= % == === != !== > < >= <= && || ! ++ -- ? : \\ '' \"\" // /* */"
            , Lesson Nothing "Musik" "In der Welt der Musik gibt es unendliche Möglichkeiten zur kreativen Entfaltung. Klaviere und Violinen, Trommeln und Flöten fügen sich zu harmonischen Melodien. Töne werden zu Emotionen, und Musiker teilen ihre Leidenschaft mit der Welt. Die Musik verbindet uns und lässt unsere Herzen im Takt schlagen."

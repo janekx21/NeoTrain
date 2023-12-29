@@ -56,8 +56,25 @@ view t model menu =
 viewMenuItem : Theme -> Int -> Lesson -> Element FrontendMsg
 viewMenuItem t doneCount book =
     let
-        charsPerSecond =
-            5
+        charsPerSecond char =
+            if char == ' ' then
+                0.8
+
+            else if Char.isDigit char then
+                5
+
+            else if Char.isUpper char then
+                2.5
+
+            else if Char.isAlpha char then
+                2
+
+            else
+                8
+
+        reduceTime : String -> Float
+        reduceTime str =
+            str |> String.foldl (\c b -> b + charsPerSecond c) 0
 
         check =
             if doneCount > 1 then
@@ -70,10 +87,10 @@ viewMenuItem t doneCount book =
                 none
     in
     Input.button
-        ([ width fill ] ++ itemAttributes t)
+        (width fill :: itemAttributes t)
         { label =
             row [ spacing 8 ]
-                [ text (book.title ++ " (" ++ printSeconds ((book.content |> String.length |> toFloat) / charsPerSecond) ++ ")")
+                [ text (book.title ++ " (" ++ printSeconds (reduceTime book.content) ++ ")")
                 , el [ tooltip <| "geübt " ++ String.fromInt doneCount ++ "x" ] <| check
                 ]
         , onPress = Just <| ChangePage <| MenuPage { current = Just book }
