@@ -18,6 +18,7 @@ layouts = [ (Name("Neo"), ["uiaenrtd", "lchg", "fv", "qjwk", "os", "pbm", "xyz",
           , (Name("NeoQwerty"), ["asdfjkl", "ruie", "qwop", "tz", "gh", "vn", "cm", "cb", "xyz", "äöüß"])
           , (Name("Vou"), ["caeitrns", "ulho", "fjv", "qg", "bp", "dw", "mk", "xyz", "öäüß"])
           , (Name("Mine"), ["crientsh", "ua","bd", "lj", "gy", "qw", "om", "vf", "pk", "xyz", "öäüß"])
+          , (Name("Noted"), ["csietnrh", "ab","mu", "yl", "fzj", "qp", "od", "vg", "wkx", "öäüß"])
           ]
 
 
