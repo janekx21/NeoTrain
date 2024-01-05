@@ -261,6 +261,7 @@ type Layout
     | NeoQwerty
     | Vou
     | Mine
+    | Noted
 
 
 type KeyboardKey
