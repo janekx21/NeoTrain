@@ -484,9 +484,12 @@ layoutNames layout =
         Mine ->
             "Mine"
 
+        Noted ->
+            "Noted"
+
 
 layouts =
-    [ Neo, Bone, NeoQwertz, AdNW, KOY, NeoQwerty, Vou, Mine ]
+    [ Neo, Bone, NeoQwertz, AdNW, KOY, NeoQwerty, Vou, Mine, Noted ]
 
 
 themes =
@@ -570,6 +573,9 @@ layerUrl layout layer =
 
                 Mine ->
                     "mine"
+
+                Noted ->
+                    "noted"
     in
     "https://dl.neo-layout.org/grafik/bilder-einzeln/flat/" ++ name ++ "-" ++ String.fromInt layer ++ "-tkl.svg"
 
