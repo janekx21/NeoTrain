@@ -388,7 +388,16 @@ toKey ( key, code ) =
             Character char
 
         _ ->
-            Control code
+            case key of
+                -- because of https://github.com/janekx21/NeoTrain/issues/8
+                "Enter" ->
+                    Control "Enter"
+
+                "Tab" ->
+                    Control "Tab"
+
+                _ ->
+                    Control code
 
 
 ticksPerSecond =
