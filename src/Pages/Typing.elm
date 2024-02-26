@@ -253,11 +253,15 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
                 |> String.padRight settings.paddingRight '\u{0000}'
                 |> String.toList
 
+        indexToAlpha i off =
+            min ((toFloat i + off / 19.2) / 8) 1
+
         typewriter =
             row [ monospace, Font.size 32, moveRight textOffset ]
-                [ row [] (List.map viewChar prev)
-                , el [ Background.color <| color t, Font.color <| wheat t ] <| viewChar dictation.current
-                , row [ Font.color <| secondary t ] (List.map viewChar next)
+                -- the i - 1 in there is a workaround to having a smoth tail at the end of the line
+                [ row [] (List.indexedMap (\i c -> viewChar c (indexToAlpha (i - 1) textOffset)) prev)
+                , el [ Background.color <| color t, Font.color <| wheat t ] <| viewChar dictation.current 1
+                , row [ Font.color <| secondary t ] (List.indexedMap (\i c -> viewChar c (indexToAlpha (List.length next - i) -textOffset)) next)
                 ]
 
         pausedEl =
@@ -339,7 +343,7 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
             ]
         , inFront hiddenInput
         ]
-        [ el [ paddingXY 128 8 ] <|
+        [ el [ paddingXY 64 8 ] <|
             if paused then
                 pausedEl
 

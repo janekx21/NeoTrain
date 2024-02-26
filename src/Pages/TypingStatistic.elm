@@ -196,7 +196,7 @@ viewError t ( char, typeErrors ) =
             ]
           <|
             el [ centerX, centerY ] <|
-                viewChar char
+                viewChar char 1
         , text <| (String.fromInt <| List.length typeErrors) ++ "x"
         ]
 

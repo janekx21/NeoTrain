@@ -65,11 +65,12 @@ wordsPerMinute book duration =
     toFloat words / durationInMin
 
 
-viewChar char =
+viewChar char opacity =
     let
         charSize =
             [ htmlAttribute <| Html.Attributes.style "width" "0.6em"
             , htmlAttribute <| Html.Attributes.style "height" "1em"
+            , alpha opacity
             ]
     in
     case char of
@@ -93,8 +94,9 @@ viewChar char =
                     materialIcon Icons.keyboard_tab
 
         _ ->
-            text <|
-                String.fromChar char
+            el charSize <|
+                text <|
+                    String.fromChar char
 
 
 printSeconds seconds =
