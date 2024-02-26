@@ -121,8 +121,8 @@ view t settings { layer } =
             , column [ spacing 32, alignTop ]
                 [ settingsBlock "Zeichen links und rechts vom Cursor" <|
                     column [ width fill, spacing 8 ]
-                        [ slider t 0 50 settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = value })
-                        , slider t 0 50 settings.paddingRight (\value -> SetSettings { settings | paddingRight = value })
+                        [ slider t 8 50 settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = value })
+                        , slider t 8 50 settings.paddingRight (\value -> SetSettings { settings | paddingRight = value })
                         ]
                 , settingsBlock "Theme" <|
                     row [ width fill, spacing 8 ]
