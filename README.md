@@ -1,3 +1,4 @@
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/S6S7DBDPZ)
 <p align="center">
     <img src="./public/icon_with_text.svg" alt="Neo Train Logo"/>
 </p>
