@@ -9,6 +9,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Html
 import Html.Attributes
+import Html.Events
 import Lamdera.Json as Decode exposing (Decoder)
 import Material.Icons as Icons
 import Task
@@ -18,6 +19,11 @@ import Types exposing (..)
 
 
 -- Init
+
+
+hiddenInputId : String
+hiddenInputId =
+    "hidden-input"
 
 
 init : Lesson -> TypingModel
@@ -54,11 +60,29 @@ update : TypingMsg -> Settings -> TypingModel -> ( Maybe TypingModel, Cmd Fronte
 update typingMsg settings model =
     let
         focusCommand =
-            Dom.focus "hidden-input" |> Task.attempt (\_ -> NoOpFrontendMsg)
+            Dom.focus hiddenInputId |> Task.attempt (\_ -> NoOpFrontendMsg)
     in
     case typingMsg of
+        NoOp ->
+            ( Just model, Cmd.none )
+
         KeyDown keyboardKey ->
             case updateDictation keyboardKey settings model of
+                Just next ->
+                    ( Just next, focusCommand )
+
+                Nothing ->
+                    ( Just model, Time.now |> Task.perform (FinishedDictation model.errors model.lesson model.duration) )
+
+        KeyDownBatch keys ->
+            let
+                keyboardKeys =
+                    keys |> String.toList |> List.map Character
+
+                _ =
+                    Debug.log "keyboards keys" keyboardKeys
+            in
+            case updateDictationBatch keyboardKeys settings model of
                 Just next ->
                     ( Just next, focusCommand )
 
@@ -119,6 +143,26 @@ update typingMsg settings model =
                     speed + (distance * 0.02 - speed)
             in
             ( Just { model | textOffset = max (model.textOffset - (delta / 10) * speed) 0, textSpeed = nextSpeed }, Cmd.none )
+
+
+updateDictationBatch : List KeyboardKey -> Settings -> TypingModel -> Maybe TypingModel
+updateDictationBatch keys settings typing =
+    -- This is propably not needed because "onInput" results in one character strings
+    case keys of
+        head :: tail ->
+            let
+                next =
+                    updateDictation head settings typing
+            in
+            case next of
+                Just nextTyping ->
+                    updateDictationBatch tail settings nextTyping
+
+                Nothing ->
+                    next
+
+        [] ->
+            Just typing
 
 
 updateDictation : KeyboardKey -> Settings -> TypingModel -> Maybe TypingModel
@@ -268,7 +312,7 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
             el [ centerX, monospace, Font.size 32 ] <|
                 text <|
                     String.pad (settings.paddingLeft + settings.paddingRight + 1) ' ' <|
-                        "Pausiert. Drücke Leertaste"
+                        "Pausiert. Drücke Enter"
 
         pauseButton =
             roundedButton t Pause (materialIcon Icons.pause) 'p'
@@ -304,7 +348,9 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
                 ]
 
         hiddenInput =
-            el [ width (px 0), height (px 0), htmlAttribute <| Html.Attributes.style "overflow" "hidden" ] <| html <| Html.input [ Html.Attributes.id "hidden-input" ] []
+            el [ width (px 0), height (px 0), htmlAttribute <| Html.Attributes.style "overflow" "hidden" ] <|
+                html <|
+                    Html.input [ Html.Attributes.id hiddenInputId, Html.Events.onInput KeyDownBatch, Html.Attributes.value "" ] []
 
         layer =
             case ( mods.shift, mods.mod3, mods.mod4 ) of
@@ -366,7 +412,7 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
 subscriptions : TypingModel -> Sub TypingMsg
 subscriptions model =
     Sub.batch
-        [ keyDecoder |> Decode.map (KeyDown << toKey) |> Browser.Events.onKeyDown
+        [ keyDecoder |> Decode.map (ignoreCharacters << toKey) |> Browser.Events.onKeyDown
         , keyDecoder |> Decode.map (KeyUp << toKey) |> Browser.Events.onKeyUp
         , if model.paused then
             Sub.none
@@ -402,6 +448,16 @@ toKey ( key, code ) =
 
                 _ ->
                     Control code
+
+
+ignoreCharacters : KeyboardKey -> TypingMsg
+ignoreCharacters key =
+    case key of
+        Character _ ->
+            NoOp
+
+        Control _ ->
+            KeyDown key
 
 
 ticksPerSecond =

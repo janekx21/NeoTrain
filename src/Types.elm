@@ -157,12 +157,14 @@ type PageMsg
 type TypingMsg
     = KeyDown KeyboardKey
     | KeyUp KeyboardKey
+    | KeyDownBatch String
     | TickTypingTime
     | AnimationFrameDelta Float
     | Pause
     | Play
     | ToggleKeyboard
     | Exit
+    | NoOp
 
 
 type AuthMsg

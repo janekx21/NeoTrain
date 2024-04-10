@@ -19,7 +19,7 @@ view { userCount, pastDictationCount } t =
                 [ el [ padding 16 ] <| link (buttonAttributes t) { url = "https://github.com/janekx21/Neotrain", label = text "NeoTrain Github Repository" }
                 , el [ padding 16 ] <| link (buttonAttributes t) { url = "https://github.com/janekx21", label = text "Mein Github" }
                 ]
-            , el [ padding 16, centerX ] <| link (buttonAttributes t) { url = "https://github.com/janekx21/NeoTrain/issues/new", label = text "Problem melden (1min)" }
+            , el [ padding 16, centerX ] <| link (buttonAttributes t) { url = "https://github.com/janekx21/NeoTrain/issues/new", label = text "Problem/Idee melden (1min)" }
             ]
         , subTitle "Über Neo Train"
         , paragraph [] [ text "Die Web-Anwendung ist dafür gedacht Neo über Diktate zu lernen. Fang am besten mit der obersten Lektion an und arbeite dich nach unten weiter." ]

@@ -128,8 +128,9 @@ view t { past, allPoints, fromLesson } =
                             _ ->
                                 "Wow einfach nur Wow"
                 in
-                paragraph []
-                    [ text label ]
+                el [ width (px 400), padding 32 ] <|
+                    paragraph []
+                        [ text label ]
 
               else
                 none
