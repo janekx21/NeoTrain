@@ -124,6 +124,9 @@ update typingMsg settings model =
         Play ->
             ( Just { model | paused = False }, Cmd.none )
 
+        Restart ->
+            ( Just <| init model.lesson, Cmd.none )
+
         ToggleKeyboard ->
             ( Just { model | showKeyboard = not model.showKeyboard }, Cmd.none )
 
@@ -320,6 +323,9 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
         keyboardButton =
             roundedButton t ToggleKeyboard (materialIcon Icons.keyboard) 'k'
 
+        restartButton =
+            roundedButton t Restart (materialIcon Icons.refresh) 'r'
+
         hideKeyboardButton =
             roundedButton t ToggleKeyboard (materialIcon Icons.keyboard_hide) 'k'
 
@@ -386,6 +392,11 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
 
               else
                 keyboardButton
+            , if String.isEmpty dictation.prev then
+                none
+
+              else
+                restartButton
             ]
         , inFront hiddenInput
         ]

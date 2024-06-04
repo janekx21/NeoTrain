@@ -3,7 +3,6 @@ module Types exposing (..)
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Dict exposing (Dict)
-import Evergreen.V1.Types exposing (Page(..))
 import Lamdera exposing (SessionId)
 import Time exposing (Posix)
 import Translation exposing (Language)
@@ -162,6 +161,7 @@ type TypingMsg
     | AnimationFrameDelta Float
     | Pause
     | Play
+    | Restart
     | ToggleKeyboard
     | Exit
     | NoOp
