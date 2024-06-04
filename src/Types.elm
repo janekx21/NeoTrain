@@ -84,6 +84,14 @@ type alias PastDictation =
     }
 
 
+type alias PastDictationStat =
+    { errors : List TypeError
+    , lessonKey : Hash
+    , duration : Float
+    , finished : Posix
+    }
+
+
 type alias Bucket =
     List PastDictation
 
@@ -93,7 +101,12 @@ type alias BackendModel =
     , users : Dict Username User
     , sessions : Dict SessionId Session
     , currentTime : Posix
+    , lessons : Dict Hash Lesson -- this is only for making the model smaller aka caching
     }
+
+
+type alias Hash =
+    String
 
 
 type alias Session =
@@ -105,7 +118,7 @@ type alias User =
     , passwordHash : String
     , passwordSalt : String
     , settings : Settings
-    , pastDictations : List PastDictation
+    , pastDictationStats : List PastDictationStat
     }
 
 

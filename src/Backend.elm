@@ -1,6 +1,6 @@
 module Backend exposing (..)
 
-import Common exposing (defaultSettings, points)
+import Common exposing (defaultSettings, layoutNames, points)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
 import Sha256 exposing (sha256)
@@ -39,7 +39,7 @@ month =
 
 init : ( Model, Cmd BackendMsg )
 init =
-    ( { currentSaltIndex = 0, sessions = Dict.empty, users = Dict.empty, currentTime = Time.millisToPosix 0 }
+    ( { currentSaltIndex = 0, sessions = Dict.empty, users = Dict.empty, currentTime = Time.millisToPosix 0, lessons = Dict.empty }
     , Time.now |> Task.perform TimeTick
     )
 
@@ -128,7 +128,7 @@ updateFromFrontend sessionId clientId msg model =
                     , passwordHash = hash
                     , passwordSalt = salt
                     , settings = defaultSettings
-                    , pastDictations = []
+                    , pastDictationStats = []
                     }
 
                 allUsernames =
@@ -198,10 +198,13 @@ updateFromFrontend sessionId clientId msg model =
             case maybeSession of
                 Just { username } ->
                     let
+                        ( lessons, pastStat ) =
+                            createDictationStat model.lessons pastDictation
+
                         updateUser user =
-                            { user | pastDictations = pastDictation :: user.pastDictations }
+                            { user | pastDictationStats = pastStat :: user.pastDictationStats }
                     in
-                    ( { model | users = Dict.update username (Maybe.map updateUser) model.users }, Cmd.none )
+                    ( { model | users = Dict.update username (Maybe.map updateUser) model.users, lessons = lessons }, Cmd.none )
 
                 Nothing ->
                     ( model, throwOut )
@@ -209,7 +212,12 @@ updateFromFrontend sessionId clientId msg model =
         GetStatistic ->
             case maybeUser of
                 Just user ->
-                    ( model, Lamdera.sendToFrontend clientId <| UpdateStatistic user.pastDictations )
+                    ( model
+                    , user.pastDictationStats
+                        |> List.filterMap (resolveDictation model.lessons)
+                        |> UpdateStatistic
+                        |> Lamdera.sendToFrontend clientId
+                    )
 
                 Nothing ->
                     ( model, throwOut )
@@ -222,7 +230,7 @@ updateFromFrontend sessionId clientId msg model =
                 pastDictationCount =
                     model
                         |> allUsers
-                        |> List.concatMap .pastDictations
+                        |> List.concatMap .pastDictationStats
                         |> List.length
 
                 statistic : AppStatistic
@@ -239,11 +247,35 @@ updateFromFrontend sessionId clientId msg model =
                 allPoints =
                     model
                         |> allUsers
-                        |> List.concatMap .pastDictations
+                        |> List.concatMap .pastDictationStats
+                        |> List.filterMap (resolveDictation model.lessons)
                         |> List.filter (\p -> p.lesson == lesson)
                         |> List.map points
             in
             ( model, Lamdera.sendToFrontend clientId <| UpdateAllPoints allPoints )
+
+
+resolveDictation : Dict Hash Lesson -> PastDictationStat -> Maybe PastDictation
+resolveDictation lessons { duration, errors, finished, lessonKey } =
+    lessons
+        |> Dict.get lessonKey
+        |> Maybe.map
+            (\lesson ->
+                { duration = duration, errors = errors, finished = finished, lesson = lesson }
+            )
+
+
+createDictationStat : Dict Hash Lesson -> PastDictation -> ( Dict Hash Lesson, PastDictationStat )
+createDictationStat lessons_ { lesson, duration, errors, finished } =
+    let
+        ( lessonKey, lessons ) =
+            findOrInsertLesson lessons_ lesson
+
+        pastDictationStat : PastDictationStat
+        pastDictationStat =
+            { duration = duration, errors = errors, finished = finished, lessonKey = lessonKey }
+    in
+    ( lessons, pastDictationStat )
 
 
 allUsers : { a | users : Dict Username User } -> List User
@@ -251,25 +283,22 @@ allUsers { users } =
     Dict.values users
 
 
+findOrInsertLesson : Dict Hash Lesson -> Lesson -> ( Hash, Dict Hash Lesson )
+findOrInsertLesson dict lesson =
+    let
+        hash =
+            hashLesson lesson
 
-{-
-   needsLogin msg =
-       case msg of
-           UpdateSettings _ ->
-               True
+        updatedDict =
+            dict |> Dict.insert hash lesson
+    in
+    ( hash, updatedDict )
 
-           GetSettings ->
-               True
 
-           InsertUser _ _ ->
-               False
-
-           InsertSession _ _ ->
-               False
-
-           GetSession ->
-               True
-
-           RemoveSession ->
-               True
--}
+hashLesson { title, content, layout } =
+    ("lesson"
+        ++ title
+        ++ content
+        ++ (layout |> Maybe.map layoutNames |> Maybe.withDefault "")
+    )
+        |> sha256
