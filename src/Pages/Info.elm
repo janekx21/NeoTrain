@@ -26,11 +26,11 @@ view { userCount, pastDictationCount } t =
         , column [ width fill, spacing 8 ]
             [ row [ spacing 16, centerX ]
                 [ text "Benutzerzahl"
-                , el (itemBorder t ++ [ padding 4, Common.monospace, Border.color <| primary t ]) <| text <| String.fromInt userCount
+                , el (itemBorder t ++ [ padding 4, Common.monospace t.monoFont, Border.color <| primary t ]) <| text <| String.fromInt userCount
                 ]
             , row [ spacing 16, centerX ]
                 [ text "Diktate Gesammt"
-                , el (itemBorder t ++ [ padding 4, Common.monospace, Border.color <| secondary t ]) <| text <| String.fromInt pastDictationCount
+                , el (itemBorder t ++ [ padding 4, Common.monospace t.monoFont, Border.color <| secondary t ]) <| text <| String.fromInt pastDictationCount
                 ]
             ]
         ]

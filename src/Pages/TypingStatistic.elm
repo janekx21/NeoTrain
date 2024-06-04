@@ -188,7 +188,7 @@ viewError : Theme -> ( Char, List TypeError ) -> Element msg
 viewError t ( char, typeErrors ) =
     row (itemBorder t ++ [ spacing 8, padding 4, Border.rounded 999 ])
         [ el
-            [ monospace
+            [ monospace t.monoFont
             , Font.color <| wheat t
             , Background.color <| primary t
             , Border.rounded 999

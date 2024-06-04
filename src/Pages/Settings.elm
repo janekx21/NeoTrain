@@ -6,7 +6,6 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import Html.Attributes
 import Material.Icons as Icons
 import Types exposing (..)
 
@@ -93,48 +92,51 @@ view t settings { layer } =
                 (text <| String.fromInt layer2)
                 (PageMsg <| SettingsMsg <| SetLayer layer2)
                 (layer2 == layer)
-    in
-    column [ topLeftBar [ backButton t Back, logoutButton t Logout ], spacing 48 ]
-        [ title "Einstellungen"
-        , row [ spacing 48 ]
-            [ column
-                [ spacing 32, alignTop ]
-                [ settingsBlock "Layout" <|
-                    column
-                        ([ width fill
-                         ]
-                            ++ itemBorder t
-                        )
-                    <|
-                        List.map layoutSettingItem layouts
-                , settingsBlock "Blockierung"
-                    (column
-                        ([ width fill
-                         ]
-                            ++ itemBorder t
-                        )
-                        [ blockSettingItem (text "Warte auf ein Backspace") OneBackspace
-                        , blockSettingItem (text "Warte auf richtiges Zeichen") CorrectLetter
-                        ]
+
+        viewCharPadding =
+            settingsBlock "Zeichen links und rechts vom Cursor" <|
+                column [ width fill, spacing 8 ]
+                    [ slider t 8 50 settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = value })
+                    , slider t 8 50 settings.paddingRight (\value -> SetSettings { settings | paddingRight = value })
+                    ]
+
+        viewLayout =
+            settingsBlock "Layout" <|
+                column
+                    ([ width fill
+                     ]
+                        ++ itemBorder t
                     )
-                ]
-            , column [ spacing 32, alignTop ]
-                [ settingsBlock "Zeichen links und rechts vom Cursor" <|
-                    column [ width fill, spacing 8 ]
-                        [ slider t 8 50 settings.paddingLeft (\value -> SetSettings { settings | paddingLeft = value })
-                        , slider t 8 50 settings.paddingRight (\value -> SetSettings { settings | paddingRight = value })
+                <|
+                    List.map layoutSettingItem layouts
+
+        viewBlocking =
+            settingsBlock "Blockierung"
+                (column
+                    ([ width fill
+                     ]
+                        ++ itemBorder t
+                    )
+                    [ blockSettingItem (text "Warte auf ein Backspace") OneBackspace
+                    , blockSettingItem (text "Warte auf richtiges Zeichen") CorrectLetter
+                    ]
+                )
+
+        viewTheme =
+            settingsBlock "Theme" <|
+                row [ width fill, spacing 8 ]
+                    [ column ([ width fill ] ++ itemBorder t) <|
+                        List.map themeSettingItem themes
+                    , column [ spacing 8 ]
+                        [ themeDarkSettingsButton True t.dark
+                        , themeDarkSettingsButton False (not t.dark)
                         ]
-                , settingsBlock "Theme" <|
-                    row [ width fill, spacing 8 ]
-                        [ column ([ width fill ] ++ itemBorder t) <|
-                            List.map themeSettingItem themes
-                        , column [ spacing 8 ]
-                            [ themeDarkSettingsButton True t.dark
-                            , themeDarkSettingsButton False (not t.dark)
-                            ]
-                        ]
-                , settingsBlock "Ecken Rundung und Kanten Stärke" <|
-                    slider t
+                    ]
+
+        viewBorderSettings =
+            settingsBlock "Ecken Rundung und Kanten Stärke" <|
+                column [ width fill, spacing 8 ]
+                    [ slider t
                         0
                         18
                         settings.theme.rounding
@@ -145,23 +147,53 @@ view t settings { layer } =
                             in
                             SetSettings { settings | theme = theme }
                         )
-                , slider t
-                    0
-                    4
-                    settings.theme.borderWidth
-                    (\value ->
-                        let
-                            theme =
-                                { t | borderWidth = value }
-                        in
-                        SetSettings { settings | theme = theme }
-                    )
+                    , slider t
+                        0
+                        4
+                        settings.theme.borderWidth
+                        (\value ->
+                            let
+                                theme =
+                                    { t | borderWidth = value }
+                            in
+                            SetSettings { settings | theme = theme }
+                        )
+                    ]
+
+        viewFontSettings =
+            settingsBlock "Mono Schriftart" <|
+                column ([ width fill ] ++ itemBorder t) <|
+                    List.map
+                        (\f ->
+                            viewSettingsItem t
+                                (row [ monospace f, width fill ] [ text <| monoFontName f, el [ alignRight ] <| text "abcdefghijkl" ])
+                                (SetSettings { settings | theme = { t | monoFont = f } })
+                                (settings.theme.monoFont == f)
+                        )
+                        allMonoFonts
+
+        viewKeyboardPreview =
+            row [ width fill, spacing 16 ]
+                [ column (itemBorder t) (List.range 1 6 |> List.map (\n -> layerButton n False))
+                , sizedImage 535 183 [ width fill ] { src = layerUrl settings.layout layer, description = "" }
+                ]
+    in
+    column [ topLeftBar [ backButton t Back, logoutButton t Logout ], spacing 48 ]
+        [ title "Einstellungen"
+        , row [ spacing 48 ]
+            [ column
+                [ spacing 32, alignTop ]
+                [ viewLayout
+                , viewBlocking
+                , viewCharPadding
+                ]
+            , column [ spacing 32, alignTop ]
+                [ viewTheme
+                , viewFontSettings
+                , viewBorderSettings
                 ]
             ]
-        , row [ width fill, spacing 16 ]
-            [ column (itemBorder t) (List.range 1 6 |> List.map (\n -> layerButton n False))
-            , sizedImage 535 183 [ width fill ] { src = layerUrl settings.layout layer, description = "" }
-            ]
+        , viewKeyboardPreview
         ]
 
 
@@ -190,7 +222,7 @@ slider t min max value msg =
             logBase 10 max |> ceiling
     in
     row [ width fill, spacing 8 ]
-        [ el [ monospace ] <| text <| String.padLeft padding ' ' (String.fromInt value)
+        [ el [ monospace t.monoFont ] <| text <| String.padLeft padding ' ' (String.fromInt value)
         , el ([ width fill ] ++ itemBorder t) <|
             Input.slider [ width fill ]
                 { onChange = round >> msg

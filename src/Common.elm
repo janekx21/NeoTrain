@@ -233,8 +233,8 @@ truncate limit text =
         text
 
 
-monospace =
-    Font.family [ Font.typeface "PT Mono", Font.monospace ]
+monospace font =
+    Font.family [ Font.typeface <| monoFontName font, Font.monospace ]
 
 
 primary : Theme -> Color
@@ -558,7 +558,13 @@ defaultSettings =
     , paddingLeft = 20
     , paddingRight = 20
     , layout = Neo
-    , theme = { name = ElectricFields, dark = True, rounding = 10, borderWidth = 1 }
+    , theme =
+        { name = ElectricFields
+        , dark = True
+        , rounding = 10
+        , borderWidth = 1
+        , monoFont = PTMono
+        }
     , language = German
     }
 
@@ -621,3 +627,30 @@ layoutOptions t =
             }
         ]
     }
+
+
+allMonoFonts =
+    [ PTMono
+    , RobotoMono
+    , UbuntuSansMono
+    , JetBrainsMono
+    , IbmPlexMono
+    ]
+
+
+monoFontName font =
+    case font of
+        PTMono ->
+            "PT Mono"
+
+        RobotoMono ->
+            "Roboto Mono"
+
+        UbuntuSansMono ->
+            "Ubuntu Sans Mono"
+
+        JetBrainsMono ->
+            "JetBrains Mono"
+
+        IbmPlexMono ->
+            "IBM Plex Mono"

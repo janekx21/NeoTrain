@@ -292,7 +292,6 @@ view model =
                        , Border.rounded (t.rounding * 2)
                        , padding appPadding
                        , authorisedMessage l model.authorised
-                       , previewLabel l
                        ]
                 )
             <|
@@ -352,25 +351,19 @@ body model =
             Pages.Info.view model.appStatistic t
 
 
-previewLabel : Language -> Attribute msg
-previewLabel l =
-    inFront <|
-        el
-            [ alignBottom
-            , alignRight
-            , moveDown 32
-            , alpha 0.2
-            , tooltip <| translate ProgressCouldGetLost l
-            ]
-        <|
-            text <|
-                translate Preview l
-
-
 ptMonoLink : Html.Html msg
 ptMonoLink =
+    let
+        fontNames =
+            allMonoFonts
+                |> List.map (monoFontName >> String.replace " " "+")
+                |> List.map (\n -> "family=" ++ n)
+                |> String.join "&"
+    in
     Html.node "link"
-        [ Html.Attributes.href "https://fonts.googleapis.com/css2?family=PT+Mono&display=swap"
+        [ Html.Attributes.href <| "https://fonts.googleapis.com/css2?" ++ fontNames ++ "&display=swap"
+
+        -- https://fonts.googleapis.com/css2?family=Itim&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap
         , Html.Attributes.rel "stylesheet"
         ]
         []

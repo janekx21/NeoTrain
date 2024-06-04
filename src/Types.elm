@@ -124,6 +124,14 @@ type alias Settings =
     }
 
 
+type MonoFont
+    = PTMono
+    | RobotoMono
+    | UbuntuSansMono
+    | JetBrainsMono
+    | IbmPlexMono
+
+
 type alias AppStatistic =
     { userCount : Int
     , pastDictationCount : Int
@@ -272,7 +280,7 @@ type KeyboardKey
 
 
 type alias Theme =
-    { name : ThemeName, dark : Bool, rounding : Int, borderWidth : Int }
+    { name : ThemeName, dark : Bool, rounding : Int, borderWidth : Int, monoFont : MonoFont }
 
 
 type ThemeName

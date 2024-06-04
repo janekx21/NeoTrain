@@ -304,7 +304,7 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
             min ((toFloat i + off / 19.2) / 8) 1
 
         typewriter =
-            row [ monospace, Font.size 32, moveRight textOffset ]
+            row [ monospace t.monoFont, Font.size 32, moveRight textOffset ]
                 -- the i - 1 in there is a workaround to having a smoth tail at the end of the line
                 [ row [] (List.indexedMap (\i c -> viewChar c (indexToAlpha (i - 1) textOffset)) prev)
                 , el [ Background.color <| color t, Font.color <| wheat t ] <| viewChar dictation.current 1
@@ -312,7 +312,7 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
                 ]
 
         pausedEl =
-            el [ centerX, monospace, Font.size 32 ] <|
+            el [ centerX, monospace t.monoFont, Font.size 32 ] <|
                 text <|
                     String.pad (settings.paddingLeft + settings.paddingRight + 1) ' ' <|
                         "Pausiert. Drücke Enter"
