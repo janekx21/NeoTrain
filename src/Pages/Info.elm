@@ -42,7 +42,9 @@ view { userCount, pastDictationCount, pastDictationCurve } t =
                 , el (itemBorder t ++ [ padding 4, Common.monospace t.monoFont, Border.color <| secondary t ]) <| text <| String.fromInt pastDictationCount
                 ]
             ]
-        , dictationChart t pastDictationCurve
+
+        -- TODO this is broken :<
+        --, dictationChart t pastDictationCurve
         ]
 
 
