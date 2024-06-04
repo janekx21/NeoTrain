@@ -1,6 +1,6 @@
 module Backend exposing (..)
 
-import Common exposing (defaultSettings, layoutNames, points)
+import Common exposing (bucketStatistic, bucketStatisticDaily, defaultSettings, globalDictationCurveInterval, layoutNames, points)
 import Dict exposing (Dict)
 import Lamdera exposing (ClientId, SessionId)
 import Sha256 exposing (sha256)
@@ -227,16 +227,28 @@ updateFromFrontend sessionId clientId msg model =
                 userCount =
                     List.length <| allUsers <| model
 
-                pastDictationCount =
+                pastDictations =
                     model
                         |> allUsers
                         |> List.concatMap .pastDictationStats
-                        |> List.length
+
+                pastDictationCount =
+                    pastDictations |> List.length
+
+                pastDictationCurve =
+                    pastDictations
+                        |> bucketStatistic globalDictationCurveInterval
+                        |> Dict.toList
+                        |> List.map
+                            (\( k, v ) ->
+                                ( Time.millisToPosix k, List.length v )
+                            )
 
                 statistic : AppStatistic
                 statistic =
                     { userCount = userCount
                     , pastDictationCount = pastDictationCount
+                    , pastDictationCurve = pastDictationCurve
                     }
             in
             ( model, Lamdera.sendToFrontend clientId <| UpdateAppStatistic statistic )

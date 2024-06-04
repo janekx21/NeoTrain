@@ -7,7 +7,6 @@ import Chart.Item as CI
 import Common exposing (..)
 import Dict exposing (Dict)
 import Element exposing (..)
-import Element.Border as Border
 import Element.Events
 import Element.Input as Input
 import Html.Attributes
@@ -80,10 +79,10 @@ view t hovering statistic =
 viewPointsGraph : Theme -> Hover -> List PastDictation -> Element FrontendMsg
 viewPointsGraph t hovering dictations =
     let
-        items : List ( Int, Bucket )
+        items : List ( Int, PastDictationBucket )
         items =
             dictations
-                |> bucketStatistic
+                |> bucketStatisticDaily
                 |> Dict.toList
     in
     el [ width <| px 400, height fill ] <|
@@ -159,31 +158,6 @@ medianErrorRate pastDictations =
         |> median
         |> Maybe.map errorRate
         |> Maybe.withDefault 0
-
-
-bucketStatistic : List PastDictation -> Dict Int Bucket
-bucketStatistic pastDictations =
-    let
-        day =
-            1000 * 60 * 60 * 24
-
-        insert : PastDictation -> Dict Int Bucket -> Dict Int Bucket
-        insert pastDictation dict =
-            let
-                posixToBucketKey : Posix -> Int
-                posixToBucketKey posix =
-                    Time.posixToMillis posix // day
-
-                key =
-                    posixToBucketKey pastDictation.finished
-            in
-            if Dict.member key dict then
-                Dict.update key (Maybe.map (\v -> pastDictation :: v)) dict
-
-            else
-                Dict.insert key [ pastDictation ] dict
-    in
-    pastDictations |> List.foldl insert Dict.empty
 
 
 median : List PastDictation -> Maybe PastDictation

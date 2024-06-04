@@ -92,8 +92,12 @@ type alias PastDictationStat =
     }
 
 
-type alias Bucket =
+type alias PastDictationBucket =
     List PastDictation
+
+
+type alias Hover =
+    PastDictationBucket
 
 
 type alias BackendModel =
@@ -148,6 +152,7 @@ type MonoFont
 type alias AppStatistic =
     { userCount : Int
     , pastDictationCount : Int
+    , pastDictationCurve : List ( Posix, Int )
     }
 
 
@@ -201,10 +206,6 @@ type AuthMsg
 
 type SettingsMsg
     = SetLayer Int
-
-
-type alias Hover =
-    Bucket
 
 
 type BackendMsg

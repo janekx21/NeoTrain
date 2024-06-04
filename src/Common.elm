@@ -1,6 +1,7 @@
 module Common exposing (..)
 
 import Color
+import Dict exposing (Dict)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
@@ -12,6 +13,7 @@ import Hex
 import Html.Attributes
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..), Icon)
+import Time exposing (Posix)
 import Translation exposing (..)
 import Types exposing (..)
 
@@ -654,3 +656,37 @@ monoFontName font =
 
         IbmPlexMono ->
             "IBM Plex Mono"
+
+
+bucketStatistic : Int -> List { a | finished : Posix } -> Dict Int (List { a | finished : Posix })
+bucketStatistic bucketSizeMilliseconds pastDictations =
+    let
+        insert pastDictation dict =
+            let
+                posixToBucketKey : Posix -> Int
+                posixToBucketKey posix =
+                    Time.posixToMillis posix // bucketSizeMilliseconds
+
+                key =
+                    posixToBucketKey pastDictation.finished
+            in
+            if Dict.member key dict then
+                Dict.update key (Maybe.map (\v -> pastDictation :: v)) dict
+
+            else
+                Dict.insert key [ pastDictation ] dict
+    in
+    pastDictations |> List.foldl insert Dict.empty
+
+
+bucketStatisticDaily : List { a | finished : Posix } -> Dict Int (List { a | finished : Posix })
+bucketStatisticDaily =
+    bucketStatistic day
+
+
+globalDictationCurveInterval =
+    day * 30
+
+
+day =
+    1000 * 60 * 60 * 24

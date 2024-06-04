@@ -53,6 +53,7 @@ init url key =
       , appStatistic =
             { userCount = 1 --min one
             , pastDictationCount = 0
+            , pastDictationCurve = []
             }
       }
     , Cmd.batch [ Lamdera.sendToBackend GetSession, Lamdera.sendToBackend GetAppStatistic ]
