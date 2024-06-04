@@ -281,6 +281,7 @@ type ThemeName
     | CandyLand
     | NeoClassic
     | Dracula
+    | Contrast
 
 
 type NamedColor

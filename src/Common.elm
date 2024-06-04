@@ -332,6 +332,20 @@ resolveColor color theme =
 
                             White ->
                                 rgb255 40 42 54
+
+                Contrast ->
+                    case color of
+                        Primary ->
+                            rgb255 254 158 24
+
+                        Secondary ->
+                            rgb255 4 200 200
+
+                        Black ->
+                            rgb255 0 0 0
+
+                        White ->
+                            rgb255 255 255 255
     in
     if theme.dark then
         invertLightness rgb
@@ -500,6 +514,7 @@ themes =
     , ( "Candy Land", CandyLand )
     , ( "Neo Classic", NeoClassic )
     , ( "Dracula", Dracula )
+    , ( "Contrast", Contrast )
     ]
 
 
