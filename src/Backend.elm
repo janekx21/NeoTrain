@@ -241,7 +241,7 @@ updateFromFrontend sessionId clientId msg model =
                         |> Dict.toList
                         |> List.map
                             (\( k, v ) ->
-                                ( Time.millisToPosix k, List.length v )
+                                ( Time.millisToPosix (k * globalDictationCurveInterval), List.length v )
                             )
 
                 statistic : AppStatistic
