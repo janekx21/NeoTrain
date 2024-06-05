@@ -685,7 +685,7 @@ bucketStatisticDaily =
 
 
 globalDictationCurveInterval =
-    day * 30
+    day * 14
 
 
 day =

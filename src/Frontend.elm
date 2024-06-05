@@ -376,23 +376,17 @@ styleTag : Theme -> Html.Html msg
 styleTag t =
     Html.node "style"
         []
+        -- text color transitions look weird
         [ Html.text <| """
 *::-webkit-scrollbar {
-    width: 24px;
-}
-*::-webkit-scrollbar-track {
-    border-left: """ ++ String.fromInt t.borderWidth ++ """px solid """ ++ (toHex <| black t) ++ """;
+    width: 20px;
 }
 *::-webkit-scrollbar-thumb {
     border-radius: """ ++ String.fromInt (t.rounding - 4) ++ """px;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
     background-color: """ ++ (toHex <| black t) ++ """;
 }
 * {
-    transition: color 50ms ease-out;
-    transition: background-color 50ms ease-out;
-    transition: scale 50ms ease-out;
+    transition: color 0ms linear, background-color 100ms ease-out, scale 100ms ease-out;
 }
 :not(.s.sby) > *:hover[role=button], a:hover {
     z-index: 1;
@@ -402,17 +396,5 @@ styleTag t =
 input[type="range"]:hover ~ div > div > div > div:nth-child(2) {
     scale: 1.4;
 }
-/*animation-name: opacityOn;
-animation-duration: 50ms;
-@keyframes opacityOn {
-    0% {
-        scale: 0.9;
-        opacity: 0;
-    }
-    100% {
-        scale: 1;
-        opacity: 1;
-    }
-}*/
 """
         ]

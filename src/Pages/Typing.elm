@@ -392,7 +392,7 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
 
               else
                 keyboardButton
-            , if String.isEmpty dictation.prev then
+            , if String.isEmpty dictation.prev && paused then
                 none
 
               else
