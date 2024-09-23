@@ -422,6 +422,7 @@ input[type="range"]:hover ~ div > div > div > div:nth-child(2) {
 div:has(>label #hidden-input:focus) {
     opacity: 0;
 }
+
 div:has(>label #hidden-input) {
     opacity: 1;
     transition: opacity 200ms;
