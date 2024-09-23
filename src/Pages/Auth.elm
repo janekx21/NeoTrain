@@ -7,7 +7,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Generated.Icon
-import Html as Html
+import Html
 import Html.Events
 import Json.Decode as Decode
 import Lamdera
@@ -46,15 +46,9 @@ update authMsg authModel =
             ( JustModel authModel, Cmd.none )
 
 
-view : Language -> Theme -> AuthModel -> Element AuthMsg
-view l t { username, password, passwordVisibility, failed } =
+view : Device -> Language -> Theme -> AuthModel -> Element AuthMsg
+view device l t { username, password, passwordVisibility, failed } =
     let
-        inputPadding =
-            { top = 12, bottom = 12, left = 12, right = 12 }
-
-        inputStyle =
-            [ width fill, Background.color <| wheat t, paddingEach inputPadding ] ++ itemBorder t
-
         eyeButton =
             Input.button [ height fill, padding 10, tooltip <| translate ShowPassword l ]
                 { label =
@@ -69,63 +63,80 @@ view l t { username, password, passwordVisibility, failed } =
                 }
 
         heading =
-            inFront <| el [ centerX, moveUp 140, scale 1.4 ] <| html <| Generated.Icon.icon <| toHex <| black t
+            el
+                --     [ centerX
+                --     -- , moveUp 140
+                --     -- , scale <| ifMobile device 0.7 1.4
+                --     ]
+                []
+            <|
+                html <|
+                    Generated.Icon.icon <|
+                        toHex <|
+                            black t
     in
-    column [ spacing 32, heading, topRightBar [ translateButton t ToggleTranslation, infoButton t ToInfo ] ]
-        [ title <| (translate Login l ++ " / " ++ translate Register l)
-        , case failed of
-            NotAsked ->
-                none
+    column [ spacing 42, height fill, topRightBar device [ translateButton t ToggleTranslation, infoButton t ToInfo ] ]
+        [ ifMobile device (column [ centerX ] [ spacer 64, heading, spacer 32 ]) none
+        , column
+            ([ spacing 32, width fill ]
+                ++ ifMobile device [] [ inFront <| el [ moveUp 140, scale 1.4, centerX ] <| heading ]
+            )
+            [ title <| (translate Login l ++ " / " ++ translate Register l)
+            , case failed of
+                NotAsked ->
+                    none
 
-            Types.WrongUsernameOrPassword ->
-                el [ Font.color <| primary t ] <| text <| translate Translation.WrongUsernameOrPassword l
+                Types.WrongUsernameOrPassword ->
+                    el [ Font.color <| primary t ] <| text <| translate Translation.WrongUsernameOrPassword l
 
-            Types.UsernameOrPasswordInvalid ->
-                paragraph [ Font.color <| primary t, width (px 300) ] [ text <| translate Translation.UsernameOrPasswordInvalid l ]
-        , el [ width fill ] <|
-            html <|
-                Html.form [] <|
-                    List.singleton <|
-                        layoutWith (layoutOptions t) [ width fill, height fill, Background.color <| wheat t, Font.color <| black t ] <|
-                            column [ spacing 16, width fill ]
-                                [ column [ spacing 8, width fill ]
-                                    [ subTitle <| translate Username l
-                                    , Input.username inputStyle
-                                        { text = username
-                                        , label = Input.labelHidden "username"
-                                        , placeholder = Nothing
-                                        , onChange = SetUsername
-                                        }
+                Types.UsernameOrPasswordInvalid ->
+                    paragraph [ Font.color <| primary t, width (px 300) ] [ text <| translate Translation.UsernameOrPasswordInvalid l ]
+            , el [ width fill ] <|
+                html <|
+                    Html.form [] <|
+                        List.singleton <|
+                            layoutWith (layoutOptions t) [ width fill, height fill, Background.color <| wheat t, Font.color <| black t ] <|
+                                column [ spacing 16, width fill ]
+                                    [ column [ spacing 8, width fill ]
+                                        [ subTitle <| translate Username l
+                                        , Input.username (inputStyle t)
+                                            { text = username
+                                            , label = Input.labelHidden "username"
+                                            , placeholder = Nothing
+                                            , onChange = SetUsername
+                                            }
+                                        ]
+                                    , column [ spacing 8, width fill ]
+                                        [ subTitle <| translate Password l
+                                        , Input.currentPassword
+                                            (inputStyle t
+                                                ++ [ inFront <| el [ alignRight ] <| eyeButton
+                                                   , paddingEach { inputPadding | right = 44 }
+                                                   , onEnter <| TryLogin username password
+                                                   ]
+                                            )
+                                            { text = password
+                                            , label = Input.labelHidden "password"
+                                            , placeholder = Nothing
+                                            , onChange = SetPassword
+                                            , show = passwordVisibility
+                                            }
+                                        ]
                                     ]
-                                , column [ spacing 8, width fill ]
-                                    [ subTitle <| translate Password l
-                                    , Input.currentPassword
-                                        (inputStyle
-                                            ++ [ inFront <| el [ alignRight ] <| eyeButton
-                                               , paddingEach { inputPadding | right = 44 }
-                                               , onEnter <| TryLogin username password
-                                               ]
-                                        )
-                                        { text = password
-                                        , label = Input.labelHidden "password"
-                                        , placeholder = Nothing
-                                        , onChange = SetPassword
-                                        , show = passwordVisibility
-                                        }
-                                    ]
-                                ]
-        , column [ spacing 16, width fill ]
-            [ row [ spacing 16, width fill ]
-                [ Input.button
-                    ([ width fill ] ++ buttonAttributes t)
-                    { label = el [ centerX ] <| text <| translate Login l, onPress = Just <| TryLogin username password }
+            , column [ spacing 16, width fill ]
+                [ mobileRow device
+                    [ spacing 16, width fill ]
+                    [ Input.button
+                        ([ width fill ] ++ buttonAttributes t)
+                        { label = el [ centerX ] <| text <| translate Login l, onPress = Just <| TryLogin username password }
+                    , Input.button
+                        ([ width fill ] ++ buttonAttributes t)
+                        { label = el [ centerX ] <| text <| translate Register l, onPress = Just <| TryRegister username password }
+                    ]
                 , Input.button
-                    ([ width fill ] ++ buttonAttributes t)
-                    { label = el [ centerX ] <| text <| translate Register l, onPress = Just <| TryRegister username password }
+                    ([ width fill ] ++ buttonAttributes t ++ primaryAttributes t)
+                    { label = row [ centerX, spacing 4 ] [ text <| translate Translation.WithoutLogin l, materialIcon Icons.arrow_forward ], onPress = Just Types.WithoutLogin }
                 ]
-            , Input.button
-                ([ width fill ] ++ buttonAttributes t ++ primaryAttributes t)
-                { label = row [ centerX, spacing 4 ] [ text <| translate Translation.WithoutLogin l, materialIcon Icons.arrow_forward ], onPress = Just Types.WithoutLogin }
             ]
         ]
 

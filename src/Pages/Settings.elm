@@ -17,8 +17,8 @@ update msg model =
             ( { layer = layer }, Cmd.none )
 
 
-view : Theme -> Settings -> { layer : Int } -> Element FrontendMsg
-view t settings { layer } =
+view : Device -> Theme -> Settings -> { layer : Int } -> Element FrontendMsg
+view device t settings { layer } =
     let
         settingsBlock label child =
             column [ width fill, spacing 8 ]
@@ -178,9 +178,10 @@ view t settings { layer } =
                 , sizedImage 535 183 [ width fill ] { src = layerUrl settings.layout layer, description = "" }
                 ]
     in
-    column [ topLeftBar [ backButton t Back, logoutButton t Logout ], spacing 48 ]
+    column [ topLeftBar device [ backButton t Back, logoutButton t Logout ], spacing 48, topBarPadding ]
         [ title "Einstellungen"
-        , row [ spacing 48 ]
+        , mobileRow device
+            [ spacing 48 ]
             [ column
                 [ spacing 32, alignTop ]
                 [ viewLayout

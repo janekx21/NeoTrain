@@ -10,8 +10,8 @@ import Pages.Typing
 import Types exposing (..)
 
 
-view : Theme -> FrontendModel -> Menu -> Element FrontendMsg
-view t model menu =
+view : Device -> Theme -> FrontendModel -> Menu -> Element FrontendMsg
+view device t model menu =
     let
         block label child =
             column [ spacing 8 ] [ subTitle label, child ]
@@ -19,10 +19,10 @@ view t model menu =
         sidebar =
             case menu.current of
                 Just lesson ->
-                    column [ height fill, spacing 32 ]
+                    column [ height fill, spacing 32, width fill ]
                         [ block "Zeichenanzahl" <| text <| String.fromInt <| String.length lesson.content
                         , block "Wortanzahl" <| text <| String.fromInt <| List.length <| String.split " " <| lesson.content
-                        , block "Vorschau" <| paragraph [ width (px 500), height fill, htmlAttribute <| HA.style "text-align" "justify" ] [ text (lesson.content |> Common.truncate 350) ]
+                        , block "Vorschau" <| paragraph [ width fill, height fill, htmlAttribute <| HA.style "text-align" "justify" ] [ text (lesson.content |> Common.truncate 350) ]
                         , el [ alignRight, alignBottom ] <| squareButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (text "Start") 'r'
                         ]
 
@@ -40,14 +40,17 @@ view t model menu =
         lessonFilter : Lesson -> Bool
         lessonFilter l =
             l.layout |> Maybe.map (\y -> y == model.settings.layout) |> Maybe.withDefault True
-    in
-    column [ spacing 32, topRightBar [ infoButton t (ChangePage InfoPage), statisticButton t, settingsButton ] ]
-        [ title "Diktate"
-        , row
-            [ spacing 40 ]
-            [ column
-                (itemBorder t ++ [ height (fill |> maximum 512), scrollbarY, width fill ])
+
+        lessonList =
+            column
+                (itemBorder t ++ [ height (fill |> maximum 512 |> minimum 400), scrollbarY, width fill ])
                 (lessons |> List.filter lessonFilter |> List.map (\l -> viewMenuItem t (lessonDoneCount l) l))
+    in
+    column [ spacing 32, topRightBar device [ infoButton t (ChangePage InfoPage), statisticButton t, settingsButton ] ]
+        [ title "Diktate"
+        , mobileRow device
+            [ spacing 40 ]
+            [ lessonList
             , sidebar
             ]
         ]
@@ -89,9 +92,9 @@ viewMenuItem t doneCount book =
     Input.button
         (width fill :: itemAttributes t)
         { label =
-            row [ spacing 8 ]
-                [ text (book.title ++ " (" ++ printSeconds (reduceTime book.content) ++ ")")
-                , el [ tooltip <| "geübt " ++ String.fromInt doneCount ++ "x" ] <| check
+            row [ spacing 8, width fill ]
+                [ paragraph [] [ text (book.title ++ " (" ++ printSeconds (reduceTime book.content) ++ ")") ]
+                , el [ tooltip <| "geübt " ++ String.fromInt doneCount ++ "x", alignRight ] <| check
                 ]
         , onPress = Just <| ChangePage <| MenuPage { current = Just book }
         }

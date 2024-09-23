@@ -11,20 +11,21 @@ import Time exposing (Posix)
 import Types exposing (..)
 
 
-view : AppStatistic -> Theme -> Element FrontendMsg
-view { userCount, pastDictationCount, pastDictationCurve } t =
+view : Device -> AppStatistic -> Theme -> Element FrontendMsg
+view device { userCount, pastDictationCount, pastDictationCurve } t =
     let
         now =
             1717505923
     in
-    column [ topLeftBar [ backButton t Back, logoutButton t Logout ], spacing 16, width (px 600) ]
+    column [ topLeftBar device [ backButton t Back, logoutButton t Logout ], spacing 16, paddingXY 0 16 ]
         [ subTitle "Über Neo"
         , paragraph [] [ text "Neo ist eine ergonomische Tastaturbelegung, welche für die deutsche Sprache optimiert ist. Wenn du noch mehr über Neo erfahren möchstes besuch bitte die Homepage." ]
         , el [ padding 16, centerX ] <| link (buttonAttributes t) { url = "https://www.neo-layout.org/", label = text "Neo Homepage" }
         , subTitle "Über Mich"
         , paragraph [] [ text "Ich bin Janek, studiere Informatik an der OvGU und programmiere, aus Interesse an funktionalen Programmiersprachen, in Elm. Ich habe diese Web-App aus Liebe zu Neo und Elm gebaut und hoffe, dass sie dir gefällt." ]
         , column [ centerX ]
-            [ row [ centerX ]
+            [ mobileRow device
+                [ centerX ]
                 [ el [ padding 16 ] <| link (buttonAttributes t) { url = "https://github.com/janekx21/Neotrain", label = text "NeoTrain Github Repository" }
                 , el [ padding 16 ] <| link (buttonAttributes t) { url = "https://github.com/janekx21", label = text "Mein Github" }
                 ]
@@ -42,22 +43,30 @@ view { userCount, pastDictationCount, pastDictationCurve } t =
                 , el (itemBorder t ++ [ padding 4, Common.monospace t.monoFont, Border.color <| secondary t ]) <| text <| String.fromInt pastDictationCount
                 ]
             ]
-        , dictationChart t pastDictationCurve
+        , dictationChart device t pastDictationCurve
         ]
 
 
-dictationChart : Theme -> List ( Posix, Int ) -> Element msg
-dictationChart t dictationCurve =
+dictationChart : Device -> Theme -> List ( Posix, Int ) -> Element msg
+dictationChart device t dictationCurve =
     let
         data =
             dictationCurve
                 |> List.map (\( x, y ) -> { x = toFloat (Time.posixToMillis x), x2 = toFloat (Time.posixToMillis x + globalDictationCurveInterval), y = toFloat y })
+
+        widthPx =
+            case device.class of
+                Phone ->
+                    200
+
+                _ ->
+                    400
     in
-    el [ width (px 400), height (px 300), centerX ] <|
+    el [ width (px widthPx), height (px 300), centerX ] <|
         html <|
             C.chart
                 [ CA.height 300
-                , CA.width 400
+                , CA.width widthPx
                 ]
                 [ C.xLabels [ CA.withGrid, CA.color (toHex <| black t), CA.times Time.utc ]
                 , C.yLabels [ CA.color (toHex <| black t) ]

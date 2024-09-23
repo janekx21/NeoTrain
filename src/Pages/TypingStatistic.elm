@@ -22,8 +22,8 @@ init past fromLesson =
     TypingStatisticPage { past = past, allPoints = Nothing, fromLesson = fromLesson }
 
 
-view : Theme -> TypingStatisticModel -> Element FrontendMsg
-view t { past, allPoints, fromLesson } =
+view : Device -> Theme -> TypingStatisticModel -> Element FrontendMsg
+view device t { past, allPoints, fromLesson } =
     let
         { lesson, errors, duration } =
             past
@@ -46,11 +46,12 @@ view t { past, allPoints, fromLesson } =
                 )
                 allPoints
     in
-    row
+    mobileRow device
         [ spacing 42
-        , topLeftBar [ backButton t Back ]
-        , bottomCenterBar [ roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (materialIcon Icons.refresh) 'r' ]
+        , topLeftBar device [ backButton t Back ]
+        , bottomCenterBar device [ roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (materialIcon Icons.refresh) 'r' ]
         , paddingEach { top = 0, left = 0, right = 0, bottom = 16 } -- extra bottom space for button
+        , topBarPadding
         ]
         [ column [ spacing 48, width fill ]
             [ title "Deine Tippstatistik"
@@ -128,7 +129,7 @@ view t { past, allPoints, fromLesson } =
                             _ ->
                                 "Wow einfach nur Wow"
                 in
-                el [ width (px 400), padding 32 ] <|
+                el ([ width fill ] ++ ifMobile device [] [ padding 32 ]) <|
                     paragraph []
                         [ text label ]
 
@@ -136,10 +137,10 @@ view t { past, allPoints, fromLesson } =
                 none
             , case maybeAllPoints of
                 Just allP ->
-                    el [ width (px 400), padding 32, tooltip "weltweite Online Statistik" ] <| pointChart t allP <| points past
+                    el [ width (px 380), padding 32, tooltip "weltweite Online Statistik" ] <| pointChart t allP <| points past
 
                 Nothing ->
-                    el [ width (px 400), height (px 300), alpha 0.5 ] <| el [ centerX, centerY ] <| text "keine online Statistik"
+                    el [ width (px 380), height (px 300), alpha 0.5 ] <| el [ centerX, centerY ] <| text "keine online Statistik"
             ]
         ]
 
@@ -162,7 +163,7 @@ pointChart t points myPoints =
     html <|
         C.chart
             [ CA.height 300
-            , CA.width 400
+            , CA.width 380
             ]
             [ C.xLabels [ CA.withGrid, CA.color (toHex <| black t) ]
             , C.yLabels [ CA.color (toHex <| black t) ]

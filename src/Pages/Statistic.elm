@@ -17,8 +17,8 @@ import Time exposing (Posix)
 import Types exposing (..)
 
 
-view : Theme -> Hover -> List PastDictation -> Element FrontendMsg
-view t hovering statistic =
+view : Device -> Theme -> Hover -> List PastDictation -> Element FrontendMsg
+view device t hovering statistic =
     let
         viewPast : PastDictation -> Element FrontendMsg
         viewPast past =
@@ -50,9 +50,10 @@ view t hovering statistic =
                     -- placeholder because of hover jitter
                     column [ spacing 8 ] [ text " ", text " " ]
     in
-    column [ topLeftBar [ backButton t Back ], spacing 48, width fill ]
+    column [ topLeftBar device [ backButton t Back ], spacing 48, width fill, topBarPadding ]
         [ title "Statistik"
-        , row [ width fill, spacing 48 ]
+        , mobileRow device
+            [ width fill, spacing 48 ]
             [ column [ spacing 8, width fill, alignTop ]
                 [ subTitle "Letzte Diktate"
                 , if List.isEmpty statistic then
@@ -85,7 +86,7 @@ viewPointsGraph t hovering dictations =
                 |> bucketStatisticDaily
                 |> Dict.toList
     in
-    el [ width <| px 400, height fill ] <|
+    el [ width <| px 380, height fill ] <|
         html <|
             C.chart
                 ([ CA.height 300

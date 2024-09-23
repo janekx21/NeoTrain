@@ -120,16 +120,34 @@ printTime seconds =
     min ++ ":" ++ sec
 
 
-topLeftBar =
-    inFront << row [ moveUp (appPadding + 21), moveLeft (appPadding + 21), spacing 16 ]
+topLeftBar device =
+    let
+        goingRight =
+            case device.class of
+                Phone ->
+                    32
+
+                _ ->
+                    0
+    in
+    inFront << row [ moveUp (appPadding device + 21), moveLeft (appPadding device + 21 - goingRight), spacing 16 ]
 
 
-topRightBar =
-    inFront << row [ moveUp (appPadding + 21), moveRight (appPadding + 21), spacing 16, alignRight ]
+topRightBar device =
+    let
+        goingLeft =
+            case device.class of
+                Phone ->
+                    32
+
+                _ ->
+                    0
+    in
+    inFront << row [ moveUp (appPadding device + 21), moveRight (appPadding device + 21 - goingLeft), spacing 16, alignRight ]
 
 
-bottomCenterBar =
-    inFront << row [ moveDown (appPadding + 21), spacing 16, centerX, alignBottom ]
+bottomCenterBar device =
+    inFront << row [ moveDown (appPadding device + 21), spacing 16, centerX, alignBottom ]
 
 
 toHex =
@@ -215,7 +233,7 @@ tooltip string =
 
 
 title labelText =
-    el [ Font.size 32 ] <| text labelText
+    paragraph [ Font.size 32 ] [ text labelText ]
 
 
 subTitle labelText =
@@ -237,6 +255,10 @@ truncate limit text =
 
 monospace font =
     Font.family [ Font.typeface <| monoFontName font, Font.monospace ]
+
+
+
+-- COLORS
 
 
 primary : Theme -> Color
@@ -520,8 +542,23 @@ themes =
     ]
 
 
-appPadding =
-    24
+appPadding : Device -> number
+appPadding device =
+    ifMobile device 8 24
+
+
+spacer : Int -> Element msg
+spacer n =
+    el [ width (px n), height (px n) ] none
+
+
+topBarPadding =
+    paddingEach { top = 24, bottom = 0, left = 0, right = 0 }
+
+
+mobileRow : Device -> List (Attribute msg) -> List (Element msg) -> Element msg
+mobileRow device =
+    ifMobile device column row
 
 
 pageTitle page =
@@ -690,3 +727,20 @@ globalDictationCurveInterval =
 
 day =
     1000 * 60 * 60 * 24
+
+
+ifMobile : Device -> a -> a -> a
+ifMobile device a b =
+    if device.class == Phone then
+        a
+
+    else
+        b
+
+
+inputStyle t =
+    [ width fill, Background.color <| wheat t, paddingEach inputPadding ] ++ itemBorder t
+
+
+inputPadding =
+    { top = 12, bottom = 12, left = 12, right = 12 }

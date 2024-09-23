@@ -7,11 +7,13 @@ import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
+import Element.Input as Input
 import Html
 import Html.Attributes
 import Html.Events
 import Lamdera.Json as Decode exposing (Decoder)
 import Material.Icons as Icons
+import Svg.Attributes exposing (overflow)
 import Task
 import Time
 import Types exposing (..)
@@ -278,9 +280,18 @@ advanceDictation dict =
 -- View
 
 
-view : Theme -> TypingModel -> Settings -> Element TypingMsg
-view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset } settings =
+view : Device -> Theme -> TypingModel -> Settings -> Element TypingMsg
+view device t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset } settings =
     let
+        fontSize =
+            ifMobile device 24 32
+
+        paddingLeft =
+            ifMobile device 4 settings.paddingLeft
+
+        paddingRight =
+            ifMobile device 22 settings.paddingLeft
+
         color =
             if madeError then
                 primary
@@ -290,21 +301,21 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
 
         prev =
             dictation.prev
-                |> String.right settings.paddingLeft
-                |> String.padLeft settings.paddingLeft '\u{0000}'
+                |> String.right paddingLeft
+                |> String.padLeft paddingLeft '\u{0000}'
                 |> String.toList
 
         next =
             dictation.next
-                |> String.left settings.paddingRight
-                |> String.padRight settings.paddingRight '\u{0000}'
+                |> String.left paddingRight
+                |> String.padRight paddingRight '\u{0000}'
                 |> String.toList
 
         indexToAlpha i off =
             min ((toFloat i + off / 19.2) / 8) 1
 
         typewriter =
-            row [ monospace t.monoFont, Font.size 32, moveRight textOffset ]
+            row [ monospace t.monoFont, Font.size fontSize, moveRight (textOffset * toFloat fontSize / 32.0) ]
                 -- the i - 1 in there is a workaround to having a smoth tail at the end of the line
                 [ row [] (List.indexedMap (\i c -> viewChar c (indexToAlpha (i - 1) textOffset)) prev)
                 , el [ Background.color <| color t, Font.color <| wheat t ] <| viewChar dictation.current 1
@@ -312,10 +323,10 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
                 ]
 
         pausedEl =
-            el [ centerX, monospace t.monoFont, Font.size 32 ] <|
+            el [ centerX, monospace t.monoFont, Font.size fontSize ] <|
                 text <|
-                    String.pad (settings.paddingLeft + settings.paddingRight + 1) ' ' <|
-                        "Pausiert. Drücke Enter"
+                    String.pad (paddingLeft + paddingRight + 1) ' ' <|
+                        "Pausiert. Drück eine Taste"
 
         pauseButton =
             roundedButton t Pause (materialIcon Icons.pause) 'p'
@@ -354,9 +365,28 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
                 ]
 
         hiddenInput =
-            el [ width (px 0), height (px 0), htmlAttribute <| Html.Attributes.style "overflow" "hidden" ] <|
-                html <|
-                    Html.input [ Html.Attributes.id hiddenInputId, Html.Events.onInput KeyDownBatch, Html.Attributes.value "" ] []
+            ifMobile device
+                -- html <|
+                -- Html.input
+                --     [ Html.Attributes.id hiddenInputId
+                --     , Html.Events.onInput KeyDownBatch
+                --     , Html.Attributes.value ""
+                --     , Html.Attributes.style "backgroun" ""
+                --     , Html.Attributes.placeholder "click here"
+                --     ]
+                --     []
+                (el [ width fill, padding 32, moveDown 4, Background.color <| primary t, Border.rounded <| t.rounding * 4 ] <|
+                    Input.text
+                        ([ htmlAttribute <| Html.Attributes.id hiddenInputId
+                         ]
+                            ++ inputStyle t
+                        )
+                        { onChange = KeyDownBatch, text = "Press me", placeholder = Nothing, label = Input.labelHidden "hidden-input" }
+                )
+                (el [ width (px 0), height (px 0), clip ] <|
+                    html <|
+                        Html.input [ Html.Attributes.id hiddenInputId, Html.Events.onInput KeyDownBatch, Html.Attributes.value "" ] []
+                )
 
         layer =
             case ( mods.shift, mods.mod3, mods.mod4 ) of
@@ -380,18 +410,21 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
     in
     column
         [ spacing 48
-        , topLeftBar
+        , topLeftBar device
             [ backButton t Exit
             , if paused then
                 playButton
 
               else
                 pauseButton
-            , if showKeyboard then
-                hideKeyboardButton
+            , ifMobile device
+                none
+                (if showKeyboard then
+                    hideKeyboardButton
 
-              else
-                keyboardButton
+                 else
+                    keyboardButton
+                )
             , if String.isEmpty dictation.prev && paused then
                 none
 
@@ -400,18 +433,21 @@ view t { dictation, mods, madeError, paused, showKeyboard, duration, textOffset 
             ]
         , inFront hiddenInput
         ]
-        [ el [ paddingXY 64 8 ] <|
+        [ el (ifMobile device [ paddingXY 0 32, width fill, clip ] [ paddingXY 64 8 ]) <|
             if paused then
                 pausedEl
 
             else
                 typewriter
-        , if showKeyboard then
-            --image [ width fill ] { src = layerUrl settings.layout layer, description = "" }
-            sizedImage 535 183 [ width fill ] { src = layerUrl settings.layout layer, description = "" }
-
-          else
+        , ifMobile device
             none
+            (if showKeyboard then
+                --image [ width fill ] { src = layerUrl settings.layout layer, description = "" }
+                sizedImage 535 183 [ width fill ] { src = layerUrl settings.layout layer, description = "" }
+
+             else
+                none
+            )
         , progressBar
         ]
 

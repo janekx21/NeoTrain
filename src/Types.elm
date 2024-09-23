@@ -3,6 +3,7 @@ module Types exposing (..)
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Dict exposing (Dict)
+import Element exposing (Device)
 import Lamdera exposing (SessionId)
 import Time exposing (Posix)
 import Translation exposing (Language)
@@ -20,6 +21,7 @@ type alias FrontendModel =
     , statistic : List PastDictation
     , authorised : Bool
     , appStatistic : AppStatistic
+    , device : Device
     }
 
 
@@ -171,6 +173,7 @@ type FrontendMsg
     | Logout
     | FinishedDictation (List TypeError) Lesson Float Posix
     | ChangePage Page
+    | Resize Int Int
 
 
 type PageMsg

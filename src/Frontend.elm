@@ -1,6 +1,8 @@
 module Frontend exposing (..)
 
 import Browser exposing (UrlRequest(..))
+import Browser.Dom exposing (getViewport)
+import Browser.Events exposing (onResize)
 import Browser.Navigation as Nav
 import Common exposing (..)
 import Element exposing (..)
@@ -17,6 +19,7 @@ import Pages.Settings
 import Pages.Statistic
 import Pages.Typing
 import Pages.TypingStatistic as TypingStatistic
+import Task
 import Translation exposing (..)
 import Types exposing (..)
 import Url
@@ -55,8 +58,13 @@ init url key =
             , pastDictationCount = 0
             , pastDictationCurve = []
             }
+      , device = { class = Desktop, orientation = Landscape }
       }
-    , Cmd.batch [ Lamdera.sendToBackend GetSession, Lamdera.sendToBackend GetAppStatistic ]
+    , Cmd.batch
+        [ Lamdera.sendToBackend GetSession
+        , Lamdera.sendToBackend GetAppStatistic
+        , getViewport |> Task.perform (\{ viewport } -> Resize (ceiling viewport.width) (ceiling viewport.height))
+        ]
     )
 
 
@@ -176,6 +184,9 @@ update frontendMsg model =
                 _ ->
                     updatePage pageMsg model |> Tuple.mapFirst (\page -> { model | page = page })
 
+        Resize width height ->
+            ( { model | device = classifyDevice { width = width, height = height } }, Cmd.none )
+
 
 updatePage : PageMsg -> Model -> ( Page, Cmd FrontendMsg )
 updatePage pageMsg model =
@@ -262,12 +273,16 @@ updateFromBackend msg model =
 
 subscriptions : Model -> Sub FrontendMsg
 subscriptions model =
-    case model.page of
-        TypingPage pageModel ->
-            Pages.Typing.subscriptions pageModel |> Sub.map (PageMsg << TypingMsg)
+    let
+        pageSubscriptions =
+            case model.page of
+                TypingPage pageModel ->
+                    Pages.Typing.subscriptions pageModel |> Sub.map (PageMsg << TypingMsg)
 
-        _ ->
-            Sub.none
+                _ ->
+                    Sub.none
+    in
+    Sub.batch [ pageSubscriptions, onResize Resize ]
 
 
 view : Model -> Browser.Document FrontendMsg
@@ -278,46 +293,53 @@ view model =
 
         l =
             model.settings.language
+
+        authorisedMessage : Attribute msg
+        authorisedMessage =
+            if model.authorised then
+                inFront <| none
+
+            else
+                inFront <|
+                    el
+                        (ifMobile model.device [ moveDown 32 ] [ moveDown 32 ]
+                            ++ [ alignBottom
+                               , alignLeft
+                               , alpha 0.2
+                               , tooltip <| translate ProgressWillGetLost l
+                               ]
+                        )
+                    <|
+                        text <|
+                            translate Translation.NotLoggedIn l
     in
     { title = pageTitle model.page ++ " - " ++ "Neo Train"
     , body =
         [ ptMonoLink
         , styleTag t
         , layoutWith (layoutOptions t)
-            [ width fill, height fill, Background.color <| wheat t, Font.color <| black t, scrollbarY, padding 32 ]
+            ([ width fill
+             , height fill
+             , Background.color <| wheat t
+             , Font.color <| black t
+             , scrollbarY
+             ]
+                ++ ifMobile model.device [ topBarPadding ] [ padding 32 ]
+            )
           <|
             el
                 (itemBorder t
                     ++ [ centerX
                        , centerY
                        , Border.rounded (t.rounding * 2)
-                       , padding appPadding
-                       , authorisedMessage l model.authorised
+                       , authorisedMessage
                        ]
+                    ++ ifMobile model.device [ width fill, padding 8 ] [ padding 24 ]
                 )
             <|
                 body model
         ]
     }
-
-
-authorisedMessage : Language -> Bool -> Attribute msg
-authorisedMessage l authorized =
-    if authorized then
-        inFront <| none
-
-    else
-        inFront <|
-            el
-                [ alignBottom
-                , alignLeft
-                , moveDown 32
-                , alpha 0.2
-                , tooltip <| translate ProgressWillGetLost l
-                ]
-            <|
-                text <|
-                    translate Translation.NotLoggedIn l
 
 
 body : Model -> Element FrontendMsg
@@ -331,25 +353,25 @@ body model =
     in
     case model.page of
         MenuPage menu ->
-            Pages.Menu.view t model menu
+            Pages.Menu.view model.device t model menu
 
         TypingPage typing ->
-            Pages.Typing.view t typing model.settings |> map (PageMsg << TypingMsg)
+            Pages.Typing.view model.device t typing model.settings |> map (PageMsg << TypingMsg)
 
         TypingStatisticPage pageModel ->
-            TypingStatistic.view t pageModel
+            TypingStatistic.view model.device t pageModel
 
         SettingsPage page ->
-            Pages.Settings.view t model.settings page
+            Pages.Settings.view model.device t model.settings page
 
         StatisticPage hover ->
-            Pages.Statistic.view t hover model.statistic
+            Pages.Statistic.view model.device t hover model.statistic
 
         AuthPage page ->
-            Pages.Auth.view l t page |> map (PageMsg << AuthMsg)
+            Pages.Auth.view model.device l t page |> map (PageMsg << AuthMsg)
 
         InfoPage ->
-            Pages.Info.view model.appStatistic t
+            Pages.Info.view model.device model.appStatistic t
 
 
 ptMonoLink : Html.Html msg
@@ -395,6 +417,14 @@ styleTag t =
 
 input[type="range"]:hover ~ div > div > div > div:nth-child(2) {
     scale: 1.4;
+}
+
+div:has(>label #hidden-input:focus) {
+    opacity: 0;
+}
+div:has(>label #hidden-input) {
+    opacity: 1;
+    transition: opacity 200ms;
 }
 """
         ]
