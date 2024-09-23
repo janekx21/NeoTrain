@@ -75,7 +75,7 @@ view device l t { username, password, passwordVisibility, failed } =
                         toHex <|
                             black t
     in
-    column [ spacing 42, height fill, topRightBar device [ translateButton t ToggleTranslation, infoButton t ToInfo ] ]
+    column [ spacing 42, height fill, width fill, topRightBar device [ translateButton t ToggleTranslation, infoButton t ToInfo ] ]
         [ ifMobile device (column [ centerX ] [ spacer 64, heading, spacer 32 ]) none
         , column
             ([ spacing 32, width fill ]

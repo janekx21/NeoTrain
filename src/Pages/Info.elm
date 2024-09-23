@@ -17,7 +17,7 @@ view device { userCount, pastDictationCount, pastDictationCurve } t =
         now =
             1717505923
     in
-    column [ topLeftBar device [ backButton t Back, logoutButton t Logout ], spacing 16, paddingXY 0 16 ]
+    column [ topBarPadding, topLeftBar device [ backButton t Back, logoutButton t Logout ], spacing 16 ]
         [ subTitle "Über Neo"
         , paragraph [] [ text "Neo ist eine ergonomische Tastaturbelegung, welche für die deutsche Sprache optimiert ist. Wenn du noch mehr über Neo erfahren möchstes besuch bitte die Homepage." ]
         , el [ padding 16, centerX ] <| link (buttonAttributes t) { url = "https://www.neo-layout.org/", label = text "Neo Homepage" }
@@ -62,7 +62,7 @@ dictationChart device t dictationCurve =
                 _ ->
                     400
     in
-    el [ width (px widthPx), height (px 300), centerX ] <|
+    el [ width (px widthPx), height (px 350), centerX ] <|
         html <|
             C.chart
                 [ CA.height 300

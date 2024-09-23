@@ -381,7 +381,7 @@ view device t { dictation, mods, madeError, paused, showKeyboard, duration, text
                          ]
                             ++ inputStyle t
                         )
-                        { onChange = KeyDownBatch, text = "Press me", placeholder = Nothing, label = Input.labelHidden "hidden-input" }
+                        { onChange = KeyDownBatch, text = "", placeholder = Just <| Input.placeholder [] <| text "Tastatur öffnen", label = Input.labelHidden "hidden-input" }
                 )
                 (el [ width (px 0), height (px 0), clip ] <|
                     html <|
@@ -410,6 +410,7 @@ view device t { dictation, mods, madeError, paused, showKeyboard, duration, text
     in
     column
         [ spacing 48
+        , width fill
         , topLeftBar device
             [ backButton t Exit
             , if paused then

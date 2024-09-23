@@ -46,10 +46,10 @@ view device t model menu =
                 (itemBorder t ++ [ height (fill |> maximum 512 |> minimum 400), scrollbarY, width fill ])
                 (lessons |> List.filter lessonFilter |> List.map (\l -> viewMenuItem t (lessonDoneCount l) l))
     in
-    column [ spacing 32, topRightBar device [ infoButton t (ChangePage InfoPage), statisticButton t, settingsButton ] ]
+    column [ spacing 32, width fill, topRightBar device [ infoButton t (ChangePage InfoPage), statisticButton t, settingsButton ] ]
         [ title "Diktate"
         , mobileRow device
-            [ spacing 40 ]
+            [ spacing 40, width fill ]
             [ lessonList
             , sidebar
             ]

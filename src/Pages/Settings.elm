@@ -178,17 +178,17 @@ view device t settings { layer } =
                 , sizedImage 535 183 [ width fill ] { src = layerUrl settings.layout layer, description = "" }
                 ]
     in
-    column [ topLeftBar device [ backButton t Back, logoutButton t Logout ], spacing 48, topBarPadding ]
+    column [ width fill, topLeftBar device [ backButton t Back, logoutButton t Logout ], spacing 48, topBarPadding ]
         [ title "Einstellungen"
         , mobileRow device
-            [ spacing 48 ]
+            [ spacing 48, width fill ]
             [ column
-                [ spacing 32, alignTop ]
+                [ spacing 32, alignTop, width fill ]
                 [ viewLayout
                 , viewBlocking
                 , viewCharPadding
                 ]
-            , column [ spacing 32, alignTop ]
+            , column [ spacing 32, alignTop, width fill ]
                 [ viewTheme
                 , viewFontSettings
                 , viewBorderSettings
