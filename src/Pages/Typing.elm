@@ -356,10 +356,23 @@ view device t { dictation, mods, madeError, paused, showKeyboard, duration, text
             Border.roundEach { topRight = t.rounding, bottomRight = t.rounding, topLeft = 0, bottomLeft = 0 }
 
         progressBar =
+            let
+                factor =
+                    100
+
+                offset =
+                    textOffset * factor |> floor
+
+                countFactor =
+                    19.2 * factor |> floor
+
+                ( a, b ) =
+                    ( doneCount * countFactor - offset, restCount * countFactor + offset )
+            in
             row [ spacing 8, width fill ]
                 [ row [ width fill, height (px 22) ]
-                    [ el (itemBorder t ++ [ width (fillPortion doneCount), height fill, Background.color <| black t, leftBorder ]) <| none
-                    , el (itemBorder t ++ [ width (fillPortion restCount), height fill, rightBorder ]) <| none
+                    [ el (itemBorder t ++ [ width (fillPortion a), height fill, Background.color <| black t, leftBorder ]) <| none
+                    , el (itemBorder t ++ [ width (fillPortion b), height fill, rightBorder ]) <| none
                     ]
                 , text <| printTime duration
                 ]
@@ -378,6 +391,10 @@ view device t { dictation, mods, madeError, paused, showKeyboard, duration, text
                 (el [ width fill, padding 32, moveDown 4, Background.color <| primary t, Border.rounded <| t.rounding * 4 ] <|
                     Input.text
                         ([ htmlAttribute <| Html.Attributes.id hiddenInputId
+                         , htmlAttribute <| Html.Attributes.spellcheck False
+                         , htmlAttribute <| Html.Attributes.autocomplete False
+                         , htmlAttribute <| Html.Attributes.autofocus True
+                         , htmlAttribute <| Html.Attributes.type_ "password"
                          ]
                             ++ inputStyle t
                         )

@@ -10,6 +10,7 @@ import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
+import Html.Attributes
 import Lamdera
 import Material.Icons as Icons
 import Pages.Typing
@@ -47,13 +48,16 @@ view device t { past, allPoints, fromLesson } =
                 allPoints
     in
     mobileRow device
-        [ spacing 42
-        , topLeftBar device [ backButton t Back ]
-        , bottomCenterBar device [ roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (materialIcon Icons.refresh) 'r' ]
-        , paddingEach { top = 0, left = 0, right = 0, bottom = 16 } -- extra bottom space for button
-        , topBarPadding
-        ]
-        [ column [ spacing 48, width fill ]
+        ([ spacing 42
+         , topLeftBar device [ backButton t Back ]
+         , bottomCenterBar device [ roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (materialIcon Icons.refresh) 'r' ]
+         , paddingEach { top = 0, left = 0, right = 0, bottom = 16 } -- extra bottom space for button
+         , topBarPadding
+         , width shrink
+         ]
+            ++ ifMobile device [] [ htmlAttribute <| Html.Attributes.style "width" "min-content" ]
+        )
+        [ column [ spacing 48, width shrink ]
             [ title "Deine Tippstatistik"
             , column [ spacing 8 ]
                 [ subTitle "Zeit"

@@ -233,7 +233,7 @@ tooltip string =
 
 
 title labelText =
-    paragraph [ Font.size 32 ] [ text labelText ]
+    paragraph [ Font.size 32, width shrink ] [ text labelText ]
 
 
 subTitle labelText =

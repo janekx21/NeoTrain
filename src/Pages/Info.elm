@@ -16,13 +16,16 @@ view device { userCount, pastDictationCount, pastDictationCurve } t =
     let
         now =
             1717505923
+
+        maxWidth =
+            width (fill |> maximum 800)
     in
-    column [ topBarPadding, topLeftBar device [ backButton t Back, logoutButton t Logout ], spacing 16 ]
+    column [ topBarPadding, spacing 16, topLeftBar device [ backButton t Back, logoutButton t Logout ] ]
         [ subTitle "Über Neo"
-        , paragraph [] [ text "Neo ist eine ergonomische Tastaturbelegung, welche für die deutsche Sprache optimiert ist. Wenn du noch mehr über Neo erfahren möchstes besuch bitte die Homepage." ]
+        , paragraph [ maxWidth ] [ text "Neo ist eine ergonomische Tastaturbelegung, welche für die deutsche Sprache optimiert ist. Wenn du noch mehr über Neo erfahren möchstes besuch bitte die Homepage." ]
         , el [ padding 16, centerX ] <| link (buttonAttributes t) { url = "https://www.neo-layout.org/", label = text "Neo Homepage" }
         , subTitle "Über Mich"
-        , paragraph [] [ text "Ich bin Janek, studiere Informatik an der OvGU und programmiere, aus Interesse an funktionalen Programmiersprachen, in Elm. Ich habe diese Web-App aus Liebe zu Neo und Elm gebaut und hoffe, dass sie dir gefällt." ]
+        , paragraph [ maxWidth ] [ text "Ich bin Janek, studiere Informatik an der OvGU und programmiere, aus Interesse an funktionalen Programmiersprachen, in Elm. Ich habe diese Web-App aus Liebe zu Neo und Elm gebaut und hoffe, dass sie dir gefällt." ]
         , column [ centerX ]
             [ mobileRow device
                 [ centerX ]
@@ -32,7 +35,7 @@ view device { userCount, pastDictationCount, pastDictationCurve } t =
             , el [ padding 16, centerX ] <| link (buttonAttributes t) { url = "https://github.com/janekx21/NeoTrain/issues/new", label = text "Problem/Idee melden (1min)" }
             ]
         , subTitle "Über Neo Train"
-        , paragraph [] [ text "Die Web-Anwendung ist dafür gedacht Neo über Diktate zu lernen. Fang am besten mit der obersten Lektion an und arbeite dich nach unten weiter." ]
+        , paragraph [ maxWidth ] [ text "Die Web-Anwendung ist dafür gedacht Neo über Diktate zu lernen. Fang am besten mit der obersten Lektion an und arbeite dich nach unten weiter." ]
         , column [ width fill, spacing 8 ]
             [ row [ spacing 16, centerX ]
                 [ text "Benutzerzahl"
