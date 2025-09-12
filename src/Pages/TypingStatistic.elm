@@ -15,6 +15,7 @@ import Lamdera
 import Material.Icons as Icons
 import Pages.Typing
 import Set
+import Svg
 import Types exposing (..)
 
 
@@ -155,7 +156,7 @@ view device t { past, allPoints, fromLesson } =
                 none
             , case maybeAllPoints of
                 Just allP ->
-                    el [ width (px 380), padding 32, tooltip "weltweite Online Statistik" ] <| pointChart t allP <| points past
+                    el [ width (px 380), padding 32, tooltip "weltweite Online Statistik (Histogramm)" ] <| pointChart t allP <| points past
 
                 Nothing ->
                     el [ width (px 380), height (px 300), alpha 0.5 ] <| el [ centerX, centerY ] <| text "keine online Statistik"
@@ -199,7 +200,21 @@ pointChart t points myPoints =
                         , CA.width 5
                         , CA.color (toHex <| primary t)
                         ]
+                    , C.label [ CA.color (toHex <| primary t), CA.moveUp 2 ] [ Svg.text "Dein Punkte" ] { x = toFloat myPoints, y = p.y.max }
                     ]
+
+            -- , C.labelAt .max
+            --     .max
+            --     [ CA.moveLeft 8, CA.moveUp 5, CA.alignRight, CA.color (toHex <| primary t) ]
+            --     [ Svg.text "Histogramm" ]
+            , C.labelAt CA.middle
+                .min
+                [ CA.moveDown 38, CA.color (toHex <| primary t) ]
+                [ Svg.text "Punkte" ]
+            , C.labelAt .min
+                CA.middle
+                [ CA.moveLeft 38, CA.rotate 90, CA.color (toHex <| primary t) ]
+                [ Svg.text "Frequenz" ]
             ]
 
 
