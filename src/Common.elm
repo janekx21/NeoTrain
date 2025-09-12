@@ -11,6 +11,7 @@ import Element.Keyed
 import Generated.Layouts
 import Hex
 import Html.Attributes
+import List.Extra
 import Material.Icons as Icons
 import Material.Icons.Types exposing (Coloring(..), Icon)
 import Time exposing (Posix)
@@ -401,6 +402,20 @@ mapColorLightness func color =
         |> Color.fromHsla
         |> Color.toRgba
         |> fromRgb
+
+
+nextLesson : Lesson -> Maybe Lesson
+nextLesson curr =
+    lessons
+        |> List.Extra.elemIndex curr
+        |> Maybe.andThen (\i -> lessons |> List.Extra.getAt (i + 1))
+
+
+prevLesson : Lesson -> Maybe Lesson
+prevLesson curr =
+    lessons
+        |> List.Extra.elemIndex curr
+        |> Maybe.andThen (\i -> lessons |> List.Extra.getAt (i - 1))
 
 
 

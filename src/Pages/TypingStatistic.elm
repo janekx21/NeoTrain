@@ -46,11 +46,25 @@ view device t { past, allPoints, fromLesson } =
                         Just p
                 )
                 allPoints
+
+        nextPossibleLesson =
+            nextLesson lesson
+
+        prevPossibleLesson =
+            prevLesson lesson
     in
     mobileRow device
         ([ spacing 42
          , topLeftBar device [ backButton t Back ]
-         , bottomCenterBar device [ roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (materialIcon Icons.refresh) 'r' ]
+         , bottomCenterBar device
+            [ prevPossibleLesson
+                |> Maybe.map (\l -> roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init l) (materialIcon Icons.skip_previous) 'p')
+                |> Maybe.withDefault none
+            , roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init lesson) (materialIcon Icons.refresh) 'r'
+            , nextPossibleLesson
+                |> Maybe.map (\l -> roundedButton t (ChangePage <| TypingPage <| Pages.Typing.init l) (materialIcon Icons.skip_next) 'n')
+                |> Maybe.withDefault none
+            ]
          , paddingEach { top = 0, left = 0, right = 0, bottom = 16 } -- extra bottom space for button
          , topBarPadding
          , width shrink
