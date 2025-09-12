@@ -7,6 +7,7 @@ import Chart.Item as CI
 import Common exposing (..)
 import Element exposing (..)
 import Element.Border as Border
+import Svg
 import Time exposing (Posix)
 import Types exposing (..)
 
@@ -73,6 +74,8 @@ dictationChart device t dictationCurve =
                 ]
                 [ C.xLabels [ CA.withGrid, CA.color (toHex <| black t), CA.times Time.utc ]
                 , C.yLabels [ CA.color (toHex <| black t) ]
+                , C.labelAt .min CA.middle [ CA.moveLeft 72, CA.color (toHex <| primary t) ] [ Svg.text "Diktate" ]
+                , C.labelAt CA.middle .min [ CA.moveDown 42, CA.color (toHex <| primary t) ] [ Svg.text "Zeitanschnitt" ]
                 , C.bars
                     [ CA.spacing 0.1, CA.roundTop <| toFloat t.rounding * 0.1, CA.x1 .x, CA.x2 .x2 ]
                     [ C.bar .y [ CA.color (toHex <| secondary t) ] ]
