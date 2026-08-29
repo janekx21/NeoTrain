@@ -113,10 +113,10 @@ view device t { past, allPoints, fromLesson } =
                     label =
                         case points past // 100 of
                             0 ->
-                                "Schade kaum Punkte :< Streng dich das nächste mal etwas mehr an ok? Hast du zu viele Fehler gemacht oder warst du zu langsam? Gleich nochmal!"
+                                "Du verbesserst dich! Lust, es gleich nochmal zu probieren?"
 
                             1 ->
-                                "Ja es geht vorran. Du wirst langsam richtig schnell. Noch ein paar Übungen braucht es aber. Weiter so!"
+                                "Es geht vorran. Du wirst langsam richtig gut. Weiter so!"
 
                             2 ->
                                 "Jetzt nehmen wir fahrt auf. Du kannst jetzt schon gut tippen. Wenn du weiter übst kannst du es sogar noch schneller als jetzt. Los Weiter!"
